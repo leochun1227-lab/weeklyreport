@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "weeklyMonitor": {
+      "$key": {
+        ".read": "$key === 'V-qf9JUzg9wjZDB5puKCi_j7'",
+        ".write": "$key === 'V-qf9JUzg9wjZDB5puKCi_j7'"
+      }
+    }
+  }
+}

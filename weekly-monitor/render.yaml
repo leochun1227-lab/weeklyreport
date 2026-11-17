@@ -1,0 +1,11 @@
+# Render Blueprint: 静态网站（免费，不会休眠）
+services:
+  - type: web
+    name: weekly-report-monitor
+    runtime: static
+    buildCommand: echo "static site, nothing to build"
+    staticPublishPath: web
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache

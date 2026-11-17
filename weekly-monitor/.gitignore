@@ -1,0 +1,3 @@
+agent/
+*.pdf
+__pycache__/
