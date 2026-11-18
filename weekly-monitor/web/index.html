@@ -36,7 +36,7 @@
   .hero .grow{flex:1}
 
   /* pipeline */
-  .pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:22px;overflow:hidden}
+  .pipe{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:22px;overflow:hidden}
   .stage{padding:14px 16px;border-right:1px solid var(--grid);position:relative}
   .stage:last-child{border-right:none}
   .stage .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -153,13 +153,15 @@
     <div class="console" id="console"></div>
   </div>
 
-  <div class="section-title">All checks</div>
+  <details id="allChecks">
+  <summary class="section-title" style="cursor:pointer;list-style:none">All checks <span style="color:var(--faint);font-weight:500">· click to show / hide</span></summary>
   <div class="card" style="overflow:hidden">
     <table>
       <thead><tr><th style="width:30%">Check</th><th>Status</th><th class="upd" style="width:210px">Last updated</th></tr></thead>
       <tbody id="rows"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
+  </details>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -304,7 +306,13 @@ function render(){
   // hero
   const hero = $("hero");
   const blockers = res.filter(r=>r.status==="fail" && r.blocking);
-  const onlyEmails = blockers.length && blockers.every(r=>r.id.startsWith("person_") || r.id.startsWith("kind_"));
+  // the assistant only sees three things: SAP, Emails, Other (Leo reads the details in All checks)
+  const sapList = res.filter(r=>r.id==="sap");
+  const emails = res.filter(r=>r.group==="Email");
+  const others = res.filter(r=>r.id!=="sap" && r.group!=="Email");
+  const sapBad = sapList.filter(r=>r.status==="fail");
+  const emailBlock = emails.filter(r=>r.status==="fail" && r.blocking);
+  const otherBad = others.filter(r=>r.status==="fail");
   const lastSeen = agent && agent.last_seen ? abs(agent.last_seen) : "";
   if(!online && inWin){
     hero.className="card hero fail";
@@ -322,54 +330,57 @@ function render(){
     hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>Checking every step</h2><p>SAP, email and the web apps take 1–2 minutes</p></div>`;
   } else if(blockers.length){
     hero.className="card hero fail";
-    const how = onlyEmails ? "Only emails are missing — send a reminder, pick the right email, or upload the figures below" : "Follow the suggestions below";
-    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>${blockers.length} ${blockers.length===1?"issue":"issues"} — the report can't be generated in full yet</h2><p>${how}${s.checking?" · still checking the rest…":""}</p></div>`;
+    const sapDown = sapBad.length > 0, mailBad = emailBlock.length > 0, otherDown = otherBad.length > 0;
+    const parts = [];
+    if(mailBad) parts.push("Emails: send a reminder, pick the right email, or upload the figures");
+    if(sapDown) parts.push("SAP is down: wait for Longtree IT to fix it");
+    if(otherDown) parts.push("Other: contact Leo");
+    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>The report can't be generated in full yet</h2><p>${esc(parts.join(" · "))}${s.checking?" · still checking…":""}</p></div>`;
   } else if(s.checking){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>No problems so far, still checking…</h2><p>Remaining: ${esc(s.pending.join(", "))}</p></div>`;
+    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>No problems so far, still checking…</h2><p>This takes 1–2 minutes</p></div>`;
   } else {
     hero.className="card hero ok";
-    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"All data sources are OK and the report emails have arrived"}</p></div>
+    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"SAP is working and the report emails have arrived"}</p></div>
       <button class="btn-primary big" onclick="document.getElementById('genBtn').scrollIntoView({behavior:'smooth',block:'center'})">Generate ↓</button>`;
   }
 
-  // pipeline
-  const stageDefs = [
-    {lab:"SAP", g:"SAP", pend:["SAP HANA connection"]},
-    {lab: monthly ? "Month-end emails" : "Emails", g:"Email", pend:["Outlook email"]},
-    {lab:"Data sources", g:"Data sources", pend:["Show data (Firebase)","Schedule / order data (Firebase)","Web apps","Invoice / warranty scripts","Aftersales data (HR Firebase)"]},
-    {lab:"Environment", g:"Environment", pend:["OpenAI image reading","Python packages"]},
-    {lab:"Last run", g:"Last run", pend:["Task Scheduler","Last report"]},
-  ];
-  $("pipe").innerHTML = stageDefs.map(st=>{
-    const list = res.filter(r=>r.group===st.g);
-    const pending = st.pend.some(p=>s.pending.includes(p));
-    let cls = pending && !list.some(r=>r.status==="fail") ? "checking" : worst(list);
-    if(st.g === "Last run" && cls === "fail") cls = "warn";
-    const bad = list.filter(r=>r.status==="fail").length, warn = list.filter(r=>r.status==="warn").length;
-    const val = cls==="checking" ? "Checking" : bad ? `${bad} ${bad===1?"issue":"issues"}` : warn ? `${warn} ${warn===1?"warning":"warnings"}` : list.length ? "OK" : "—";
-    let note = "";
-    if(st.g==="Email"){
-      const ppl = list.filter(r=>r.id.startsWith("person_"));
-      if(ppl.length) note = ppl.map(r=>(r.status==="ok"?"✓ ":"✗ ")+r.title.replace("Email from ","")).join("  ");
-    } else if(st.g==="SAP"){
-      const f = list.find(r=>r.id==="sap_fresh"); if(f) note = f.summary;
-    } else note = list.length ? `${list.length} checks` : "";
-    return `<div class="stage ${cls}"><div class="lab">${st.lab}</div><div class="val"><span class="dot ${cls}"></span>${val}</div><div class="note">${esc(note)}</div></div>`;
-  }).join("");
+  // three boxes for the assistant: SAP · Emails · Other
+  const pendingFor = cat => s.pending.some(p => cat === "sap" ? p === "SAP HANA connection" : cat === "email" ? p === "Outlook email"
+                                                 : p !== "SAP HANA connection" && p !== "Outlook email");
+  const box = (lab, cat, list, okText, badText, note) => {
+    const pend = pendingFor(cat);
+    let cls = list.some(r=>r.status==="fail") ? "fail" : pend ? "checking" : list.some(r=>r.status==="warn") && cat === "email" ? "warn" : list.length ? "ok" : "info";
+    const val = cls === "checking" ? "Checking" : cls === "fail" ? badText : cls === "warn" ? "Check below" : list.length ? okText : "—";
+    return `<div class="stage ${cls}"><div class="lab">${lab}</div><div class="val"><span class="dot ${cls}"></span>${val}</div><div class="note">${esc(note)}</div></div>`;
+  };
+  const ppl = emails.filter(r=>r.id.startsWith("person_"));
+  $("pipe").innerHTML =
+    box("SAP", "sap", sapList, "Working", "Down", sapBad.length ? "Waiting for Longtree IT" : "") +
+    box(monthly ? "Month-end emails" : "Emails", "email", emails, "OK", "Action needed",
+        ppl.map(r=>(r.status==="ok"?"✓ ":"✗ ")+r.title.replace("Email from ","")).join("  ")) +
+    box("Other", "other", others.filter(r=>r.status==="fail"), "OK", "Contact Leo", otherBad.length ? "Details: All checks below" : "");
 
-  // issues
-  const issues = res.filter(r=>r.status==="fail" || (r.status==="warn" && r.suggestion))
-                    .sort((a,b)=>(a.status==="fail"?0:1)-(b.status==="fail"?0:1) || a.order-b.order);
-  $("issuesWrap").style.display = issues.length ? "" : "none";
-  $("issueCount").textContent = issues.length;
-  $("issues").innerHTML = issues.map(r=>`
-    <div class="card issue ${r.status}">
+  // what the assistant needs to act on
+  const cards = [];
+  for(const r of emails.filter(r=>r.status==="fail" || (r.status==="warn" && r.suggestion))
+                       .sort((a,b)=>(a.status==="fail"?0:1)-(b.status==="fail"?0:1) || a.order-b.order)){
+    cards.push(`<div class="card issue ${r.status}">
       <div class="t"><span class="dot ${r.status}"></span>${esc(r.title)}</div>
       <div class="s">${esc(r.summary)} ${r.updated?`<span class="when">· ${esc(r.updated_label||"Updated")} ${abs(r.updated)} (${rel(r.updated)})</span>`:""}</div>
       ${r.suggestion?`<div class="fix"><b>What to do:</b> ${esc(r.suggestion)}</div>`:""}
       <div class="acts">${r.actions.map((a,i)=>actionHtml(a,i,r.id)).join("")}</div>
-    </div>`).join("");
+    </div>`);
+  }
+  if(sapBad.length) cards.push(`<div class="card issue fail">
+      <div class="t"><span class="dot fail"></span>SAP is not working</div>
+      <div class="fix"><b>What to do:</b> Wait for Longtree IT to fix SAP, then click Re-check.</div></div>`);
+  if(otherBad.length) cards.push(`<div class="card issue fail">
+      <div class="t"><span class="dot fail"></span>Something else needs fixing</div>
+      <div class="fix"><b>What to do:</b> Contact Leo.</div></div>`);
+  $("issuesWrap").style.display = cards.length ? "" : "none";
+  $("issueCount").textContent = cards.length;
+  $("issues").innerHTML = cards.join("");
 
   // table
   let html = "";
