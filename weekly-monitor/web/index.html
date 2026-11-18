@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>周报健康检查 · Regent RV</title>
+<title>Weekly Report Health Check · Regent RV</title>
 <style>
   :root{
     --ink:#0f172a;--text:#334155;--muted:#64748b;--faint:#94a3b8;--grid:#e2e8f0;--panel:#f8fafc;--bg:#f4f6fa;
@@ -11,7 +11,7 @@
     --rose:#e11d48;--rose-l:#fff1f2;--radius:12px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Inter","Microsoft YaHei",system-ui,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Inter",system-ui,sans-serif}
   .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px}
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
   h1{margin:0;font-size:24px;color:var(--ink);letter-spacing:-.01em}
@@ -97,6 +97,17 @@
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.show{opacity:1}
   .empty{padding:18px;color:var(--muted)}
+  .seg{display:inline-flex;border:1px solid var(--grid);border-radius:9px;overflow:hidden;background:#fff}
+  .seg button{border:none;border-radius:0;padding:7px 16px;font-weight:600;color:var(--muted);background:#fff}
+  .seg button.on{background:var(--indigo);color:#fff}
+  .seg button:not(.on):hover{background:var(--panel)}
+  .modebar{display:flex;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+  .modebar .hint{color:var(--muted);font-size:13px}
+  .modebar input[type=month]{font:inherit;border:1px solid var(--grid);border-radius:8px;padding:5px 8px}
+  .manual{display:flex;flex-direction:column;gap:6px;min-width:250px}
+  .manual select{font:inherit;font-size:12.5px;border:1px solid var(--grid);border-radius:8px;padding:6px;max-width:330px}
+  .manual .row{display:flex;gap:6px}
+  .manual small{color:var(--faint)}
   @media (max-width:820px){.pipe{grid-template-columns:repeat(2,1fr)}.issue{grid-template-columns:1fr}.issue .acts{grid-column:1;grid-row:auto;flex-direction:row;flex-wrap:wrap}.gen{grid-template-columns:1fr}.console,.runbar{grid-column:1}td.upd,th.upd{display:none}}
 </style>
 </head>
@@ -104,44 +115,49 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>周报健康检查</h1>
-      <div class="sub">Regent RV Weekly Report · <span id="checkedAt">正在检查…</span></div>
+      <h1>Report Health Check</h1>
+      <div class="sub">Regent RV · <span id="checkedAt">Loading…</span></div>
     </div>
-    <button id="recheck" onclick="recheck()">↻ 重新检查</button>
+    <button id="recheck" onclick="recheck()">↻ Re-check</button>
   </header>
+
+  <div class="modebar">
+    <div class="seg" id="seg"><button id="segW" onclick="switchMode('weekly')">Weekly</button><button id="segM" onclick="switchMode('monthly')">Monthly</button></div>
+    <span id="monthWrap" style="display:none"><input type="month" id="monthPick" onchange="switchMode('monthly')"></span>
+    <span class="hint" id="modeHint"></span>
+  </div>
 
   <div id="hero" class="card hero checking">
     <div class="icon">…</div>
-    <div class="grow"><h2>正在检查各个环节</h2><p>SAP、邮件、网页系统需要 1–2 分钟</p></div>
+    <div class="grow"><h2>Loading</h2><p>Reading the latest results…</p></div>
   </div>
 
   <div id="pipe" class="card pipe"></div>
 
   <div id="issuesWrap" style="display:none">
-    <div class="section-title">需要处理 <span class="count" id="issueCount">0</span></div>
+    <div class="section-title">Needs attention <span class="count" id="issueCount">0</span></div>
     <div class="issues" id="issues"></div>
   </div>
 
-  <div class="section-title">生成报告</div>
+  <div class="section-title">Generate report</div>
   <div class="card gen">
     <div>
-      <h3 id="genTitle">等待检查完成</h3>
-      <p id="genSub">所有环节没问题后就可以生成。</p>
+      <h3 id="genTitle">Waiting for checks</h3>
+      <p id="genSub">Once everything is green you can generate the report.</p>
     </div>
     <div class="ctl">
-      <label>报告日期 <input type="date" id="asOf"></label>
-      <label><input type="checkbox" id="noEmail"> 只生成，不发邮件</label>
-      <button class="btn-primary big" id="genBtn" onclick="generate(false)" disabled>生成报告</button>
+      <label id="asOfWrap">Report date <input type="date" id="asOf"></label>
+      <button class="btn-primary big" id="genBtn" onclick="generate(false)" disabled>Generate PDF</button>
     </div>
-    <div class="runbar" id="runbar"><span class="dot checking" id="runDot"></span><span id="runText"></span><span style="flex:1"></span><button id="pdfBtn" onclick="downloadPdf()" style="display:none">⇩ 下载 PDF</button></div>
+    <div class="runbar" id="runbar"><span class="dot checking" id="runDot"></span><span id="runText"></span><span style="flex:1"></span><button class="btn-primary" id="pdfBtn" onclick="downloadPdf()" style="display:none">⇩ Download PDF</button></div>
     <div class="console" id="console"></div>
   </div>
 
-  <div class="section-title">所有环节</div>
+  <div class="section-title">All checks</div>
   <div class="card" style="overflow:hidden">
     <table>
-      <thead><tr><th style="width:30%">环节</th><th>状态</th><th class="upd" style="width:200px">最后刷新</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="3" class="empty">正在检查…</td></tr></tbody>
+      <thead><tr><th style="width:30%">Check</th><th>Status</th><th class="upd" style="width:210px">Last updated</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -149,51 +165,110 @@
 
 <script src="config.js"></script>
 <script>
-const GROUPS = ["SAP","邮件","数据源","运行环境","上次运行","其它"];
-const STATUS_TEXT = {ok:"正常", warn:"注意", fail:"有问题", info:"—"};
-let status = null, runSince = 0, runPoll = null, statusTimer = null, wasRunning = false;
+const GROUPS = ["SAP","Email","Data sources","Environment","Last run","Other"];
+const STATUS_TEXT = {ok:"OK", warn:"Warning", fail:"Problem", info:"—"};
+const CFG = window.MONITOR_CONFIG;
+let status = null, agent = null, run = null, pendingCmd = null, refreshTimer = null, wasRunning = false, lastLogKey = "";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
+// ---------- formatting ----------
 function rel(isoStr){
   if(!isoStr) return "";
-  const d = new Date(isoStr), now = new Date();
-  if(isoStr.length <= 10){                       // 只有日期
+  const now = new Date();
+  if(isoStr.length <= 10){
     const days = Math.round((new Date(now.toDateString()) - new Date(isoStr+"T00:00")) / 864e5);
-    return days <= 0 ? "今天" : days === 1 ? "昨天" : `${days} 天前`;
+    return days <= 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`;
   }
-  const s = (now - d) / 1000;
-  if(s < 90) return "刚刚";
-  if(s < 3600) return `${Math.round(s/60)} 分钟前`;
-  if(s < 86400) return `${Math.round(s/3600)} 小时前`;
-  return `${Math.round(s/86400)} 天前`;
+  const s = (now - new Date(isoStr)) / 1000;
+  if(s < 90) return "just now";
+  if(s < 3600) return `${Math.round(s/60)} min ago`;
+  if(s < 86400) return `${Math.round(s/3600)} h ago`;
+  const d = Math.round(s/86400); return d === 1 ? "1 day ago" : `${d} days ago`;
 }
 function abs(isoStr){
   if(!isoStr) return "";
   const d = new Date(isoStr.length <= 10 ? isoStr+"T00:00" : isoStr);
   const opt = isoStr.length <= 10 ? {weekday:"short",day:"numeric",month:"short"} :
-              {weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"};
-  return d.toLocaleString("zh-CN", opt);
+              {weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"};
+  return d.toLocaleString("en-AU", opt);
 }
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function clock(isoStr){ return new Date(isoStr).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2600); }
 
 function copyText(text){
-  if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(text).then(()=>toast("已复制")); return; }
+  if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(text).then(()=>toast("Copied")); return; }
   const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); toast("已复制"); }catch(e){ prompt("复制下面的内容：", text); }
+  try{ document.execCommand("copy"); toast("Copied"); }catch(e){ prompt("Copy this:", text); }
   ta.remove();
 }
 
+// ---------- window / agent ----------
+function hmOf(str){ const [h,m] = str.split(":").map(Number); return h*60+m; }
+function windowText(){
+  const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return CFG.WINDOW_DAYS.map(d=>names[d]).join(", ") + (CFG.MONTH_END_DAYS ? " and month-end days" : "") + ` ${CFG.WINDOW[0]}–${CFG.WINDOW[1]}`;
+}
+function inWindowNow(){
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:CFG.TIMEZONE,weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false})
+                  .formatToParts(new Date()).map(p=>[p.type,p.value]));
+  const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(parts.weekday);
+  const mins = (Number(parts.hour)%24)*60 + Number(parts.minute);
+  const dt = new Intl.DateTimeFormat("en-CA",{timeZone:CFG.TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+  const [Y,M,D] = dt.split("-").map(Number), last = new Date(Y, M, 0).getDate();
+  const monthEnd = CFG.MONTH_END_DAYS && (D > last - 5 || D < 5);
+  return (CFG.WINDOW_DAYS.includes(day) || monthEnd) && mins >= hmOf(CFG.WINDOW[0]) && mins < hmOf(CFG.WINDOW[1]);
+}
+function agentOnline(){ return !!(agent && !agent.stopped && Date.now() - (agent.last_seen_ms||0) < 75000); }
+
+// ---------- actions ----------
 function actionHtml(a, i, rid){
   if(a.type === "mailto"){
     const href = `mailto:${encodeURIComponent(a.to)}?subject=${encodeURIComponent(a.subject)}&body=${encodeURIComponent(a.body)}`;
     return `<a class="btn btn-mail" href="${href}">✉ ${esc(a.label)}</a>
-            <button onclick="copyAction('${rid}',${i})">复制提醒内容</button>`;
+            <button onclick="copyAction('${rid}',${i})">Copy reminder text</button>`;
   }
   if(a.type === "copy") return `<button onclick="copyAction('${rid}',${i})">⧉ ${esc(a.label)}</button>`;
   if(a.type === "download") return `<button onclick="downloadPdf()">⇩ ${esc(a.label)}</button>`;
+  if(a.type === "pick_email"){
+    const opts = (a.options||[]).map(o=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join("");
+    return `<div class="manual"><small>Or use a specific email:</small>
+      <select id="pick-${a.kind}">${opts}</select>
+      <button onclick="pickEmail('${a.kind}')">Use this email</button></div>`;
+  }
+  if(a.type === "upload"){
+    return `<div class="manual"><small>Or upload the figures (screenshot, Excel or PDF):</small>
+      <input type="file" id="up-${a.kind}" accept="${esc(a.accept||"")}" multiple>
+      <button onclick="uploadFiles('${a.kind}')">⇧ Upload</button></div>`;
+  }
+  if(a.type === "clear_override") return `<button onclick="sendCmd({type:'clear_override',kind:'${a.kind}'})">↺ ${esc(a.label)}</button>`;
   return "";
+}
+function pickEmail(kind){
+  const sel = document.getElementById("pick-"+kind); if(!sel || !sel.value){ toast("Choose an email first"); return; }
+  sendCmd({type:"pick_email", kind, entry_id: sel.value, label: sel.options[sel.selectedIndex].text});
+}
+async function uploadFiles(kind){
+  const inp = document.getElementById("up-"+kind);
+  const files = inp && inp.files ? Array.from(inp.files) : [];
+  if(!files.length){ toast("Choose a file first"); return; }
+  const total = files.reduce((n,f)=>n+f.size,0);
+  if(total > 9e6){ toast("Files are too large (max 9 MB in total)"); return; }
+  if(!agentOnline()){ toast("The report PC is offline"); return; }
+  toast("Uploading…");
+  const read = f => new Promise((ok,bad)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(",")[1]); r.onerror=bad; r.readAsDataURL(f); });
+  try{
+    const payload = {at: Date.now(), files: []};
+    for(const f of files) payload.files.push({name: f.name, type: f.type, b64: await read(f)});
+    await fbPut(`uploads/${kind}`, payload);
+  }catch(e){ toast("Upload failed: " + e.message); return; }
+  sendCmd({type:"upload", kind});
+}
+function switchMode(mode){
+  const month = $("monthPick").value || (status && status.default_month) || null;
+  if(status && status.mode === mode && (mode === "weekly" || status.month === month)) return;
+  sendCmd({type:"mode", mode, month});
 }
 function copyAction(rid, i){
   const r = status.results.find(x => x.id === rid); const a = r.actions[i];
@@ -207,70 +282,79 @@ function worst(list){
   return "info";
 }
 
+// ---------- render ----------
 function render(){
   const s = status, res = s.results;
+  const monthly = s.mode === "monthly";
+  $("segW").classList.toggle("on", !monthly); $("segM").classList.toggle("on", monthly);
+  $("monthWrap").style.display = monthly ? "" : "none";
+  if(monthly && s.month && document.activeElement !== $("monthPick")) $("monthPick").value = s.month;
+  $("asOfWrap").style.display = monthly ? "none" : "";
+  $("modeHint").textContent = monthly
+    ? `Monthly report · ${s.month_label||""} · month-end emails received ${s.month_window||""}`
+    : "Weekly report (Monday) · uses this week's emails";
   const online = agentOnline(), inWin = inWindowNow();
-  if(!online) s.checking = false;                 // 电脑关了，没有正在进行的检查
-  let when = s.checking ? "正在检查…" : (s.finished ? `检查于 ${abs(s.finished)}（${rel(s.finished)}）` : "还没检查过");
-  if(online && !s.checking && s.next_auto) when += ` · 下次自动 ${new Date(s.next_auto).toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"})}`;
-  when += online ? ` · 监控电脑在线（${agent.host||""}）` : " · 监控电脑未开启";
+  if(!online) s.checking = false;
+  let when = s.checking ? "Checking…" : (s.finished ? `Checked ${abs(s.finished)} (${rel(s.finished)})` : "Not checked yet");
+  if(online && !s.checking && s.next_auto) when += ` · next auto-check ${clock(s.next_auto)}`;
+  when += online ? ` · report PC online${agent.host ? " ("+agent.host+")" : ""}` : " · report PC offline";
   $("checkedAt").textContent = when;
   $("recheck").disabled = s.checking || !online;
 
   // hero
   const hero = $("hero");
   const blockers = res.filter(r=>r.status==="fail" && r.blocking);
-  const peopleFail = blockers.filter(r=>r.id.startsWith("person_") || r.id.startsWith("kind_"));
-  const lastSeen = agent && agent.last_seen ? `${abs(agent.last_seen)}` : "";
+  const onlyEmails = blockers.length && blockers.every(r=>r.id.startsWith("person_") || r.id.startsWith("kind_"));
+  const lastSeen = agent && agent.last_seen ? abs(agent.last_seen) : "";
   if(!online && inWin){
     hero.className="card hero fail";
-    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>监控电脑没有连上</h2><p>现在是检查时间（${esc(windowText())}），但那台电脑上的监控程序没在运行${lastSeen?`（最后在线 ${esc(lastSeen)}）`:""}。
-      请确认那台电脑开着、已登录，并运行 start_agent.bat；还不行请联系 Leo。下面显示的是上一次的结果。</p></div>`;
+    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>The report PC is not connected</h2><p>It's check time (${esc(windowText())}) but the monitor on the report PC isn't running${lastSeen?` (last seen ${esc(lastSeen)})`:""}.
+      Make sure that PC is on and signed in, then run start_agent.bat. If that doesn't help, contact Leo. Results below are from the last check.</p></div>`;
   } else if(!online){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>现在不是检查时间</h2><p>每${esc(windowText())}自动检查，每 10 分钟刷新一次。${s.finished?`下面是 ${esc(abs(s.finished))} 的结果。`:""}</p></div>`;
+    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>Outside check hours</h2><p>Checks run automatically ${esc(windowText())}, every 10 minutes.${s.finished?` Showing results from ${esc(abs(s.finished))}.`:""}</p></div>`;
   } else if(!s.checking && !res.length){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>还没有检查结果</h2><p>可以手动检查一次。</p></div>
-      <button class="btn-primary big" onclick="recheck()">立即检查</button>`;
+    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>No results yet</h2><p>Run a check now.</p></div>
+      <button class="btn-primary big" onclick="recheck()">Check now</button>`;
   } else if(s.checking && !res.length){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>正在检查各个环节</h2><p>SAP、邮件、网页系统需要 1–2 分钟</p></div>`;
+    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>Checking every step</h2><p>SAP, email and the web apps take 1–2 minutes</p></div>`;
   } else if(blockers.length){
     hero.className="card hero fail";
-    const who = peopleFail.length && peopleFail.length === blockers.length ? "全部是邮件没到，发提醒就行" : "按下面的建议处理";
-    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>${blockers.length} 个环节有问题，暂时不能生成完整报告</h2><p>${who}${s.checking?" · 还在检查剩下的环节…":""}</p></div>`;
+    const how = onlyEmails ? "Only emails are missing — send a reminder, pick the right email, or upload the figures below" : "Follow the suggestions below";
+    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>${blockers.length} ${blockers.length===1?"issue":"issues"} — the report can't be generated in full yet</h2><p>${how}${s.checking?" · still checking the rest…":""}</p></div>`;
   } else if(s.checking){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>目前没发现问题，还在检查…</h2><p>还剩：${esc(s.pending.join("、"))}</p></div>`;
+    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>No problems so far, still checking…</h2><p>Remaining: ${esc(s.pending.join(", "))}</p></div>`;
   } else {
     hero.className="card hero ok";
-    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>一切就绪，可以生成报告</h2><p>所有数据源都正常，三个人的邮件都已收到</p></div>
-      <button class="btn-primary big" onclick="document.getElementById('genBtn').scrollIntoView({behavior:'smooth',block:'center'})">去生成 ↓</button>`;
+    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"All data sources are OK and all three emails have arrived"}</p></div>
+      <button class="btn-primary big" onclick="document.getElementById('genBtn').scrollIntoView({behavior:'smooth',block:'center'})">Generate ↓</button>`;
   }
 
   // pipeline
   const stageDefs = [
-    {lab:"SAP", ids:r=>r.group==="SAP", pend:["SAP HANA 连接"]},
-    {lab:"三人邮件", ids:r=>r.group==="邮件", pend:["Outlook 邮件"]},
-    {lab:"数据源", ids:r=>r.group==="数据源", pend:["展会数据 (Firebase)","排产 / 订单数据 (Firebase)","网页系统","发票 / 质保脚本"]},
-    {lab:"运行环境", ids:r=>r.group==="运行环境", pend:["OpenAI 读图","Python 依赖包"]},
-    {lab:"上次运行", ids:r=>r.group==="上次运行", pend:["Task Scheduler","上次生成的报告"]},
+    {lab:"SAP", g:"SAP", pend:["SAP HANA connection"]},
+    {lab: monthly ? "Month-end emails" : "Emails", g:"Email", pend:["Outlook email"]},
+    {lab:"Data sources", g:"Data sources", pend:["Show data (Firebase)","Schedule / order data (Firebase)","Web apps","Invoice / warranty scripts","Aftersales data (HR Firebase)"]},
+    {lab:"Environment", g:"Environment", pend:["OpenAI image reading","Python packages"]},
+    {lab:"Last run", g:"Last run", pend:["Task Scheduler","Last report"]},
   ];
   $("pipe").innerHTML = stageDefs.map(st=>{
-    const list = res.filter(st.ids);
+    const list = res.filter(r=>r.group===st.g);
     const pending = st.pend.some(p=>s.pending.includes(p));
     let cls = pending && !list.some(r=>r.status==="fail") ? "checking" : worst(list);
-    if(st.lab === "上次运行" && cls === "fail") cls = "warn";
+    if(st.g === "Last run" && cls === "fail") cls = "warn";
     const bad = list.filter(r=>r.status==="fail").length, warn = list.filter(r=>r.status==="warn").length;
-    let val = cls==="checking" ? "检查中" : bad ? `${bad} 个问题` : warn ? `${warn} 个提醒` : list.length ? "正常" : "—";
+    const val = cls==="checking" ? "Checking" : bad ? `${bad} ${bad===1?"issue":"issues"}` : warn ? `${warn} ${warn===1?"warning":"warnings"}` : list.length ? "OK" : "—";
     let note = "";
-    if(st.lab==="三人邮件"){
+    if(st.g==="Email"){
       const ppl = list.filter(r=>r.id.startsWith("person_"));
-      if(ppl.length) note = ppl.map(r=>(r.status==="ok"?"✓ ":"✗ ")+r.title.replace(" 的邮件","")).join("  ");
-    } else if(st.lab==="SAP"){
+      if(ppl.length) note = ppl.map(r=>(r.status==="ok"?"✓ ":"✗ ")+r.title.replace("Email from ","")).join("  ");
+    } else if(st.g==="SAP"){
       const f = list.find(r=>r.id==="sap_fresh"); if(f) note = f.summary;
-    } else note = `${list.length} 项`;
+    } else note = list.length ? `${list.length} checks` : "";
     return `<div class="stage ${cls}"><div class="lab">${st.lab}</div><div class="val"><span class="dot ${cls}"></span>${val}</div><div class="note">${esc(note)}</div></div>`;
   }).join("");
 
@@ -282,8 +366,8 @@ function render(){
   $("issues").innerHTML = issues.map(r=>`
     <div class="card issue ${r.status}">
       <div class="t"><span class="dot ${r.status}"></span>${esc(r.title)}</div>
-      <div class="s">${esc(r.summary)} ${r.updated?`<span class="when">· ${esc(r.updated_label||"更新")} ${abs(r.updated)}（${rel(r.updated)}）</span>`:""}</div>
-      ${r.suggestion?`<div class="fix"><b>建议：</b>${esc(r.suggestion)}</div>`:""}
+      <div class="s">${esc(r.summary)} ${r.updated?`<span class="when">· ${esc(r.updated_label||"Updated")} ${abs(r.updated)} (${rel(r.updated)})</span>`:""}</div>
+      ${r.suggestion?`<div class="fix"><b>What to do:</b> ${esc(r.suggestion)}</div>`:""}
       <div class="acts">${r.actions.map((a,i)=>actionHtml(a,i,r.id)).join("")}</div>
     </div>`).join("");
 
@@ -296,36 +380,64 @@ function render(){
     html += list.map(r=>`<tr>
       <td class="name"><span class="dot ${r.status}"></span>${esc(r.title)}</td>
       <td><span class="stat ${r.status}">${STATUS_TEXT[r.status]}</span> · ${esc(r.summary)}
-        ${r.detail?`<details><summary>详情 ▸</summary><pre class="detail">${esc(r.detail)}</pre></details>`:""}</td>
+        ${r.detail?`<details><summary>Details ▸</summary><pre class="detail">${esc(r.detail)}</pre></details>`:""}</td>
       <td class="upd">${r.updated?`${esc(rel(r.updated))}<small>${esc(r.updated_label||"")} · ${esc(abs(r.updated))}</small>`:'<span style="color:var(--faint)">—</span>'}</td>
     </tr>`).join("");
   }
-  if(s.pending.length) html += `<tr><td colspan="3" class="empty"><span class="dot checking"></span> 正在检查：${esc(s.pending.join("、"))}</td></tr>`;
-  $("rows").innerHTML = html || `<tr><td colspan="3" class="empty">${s.checking ? "正在检查…" : "还没检查"}</td></tr>`;
+  if(s.checking && s.pending.length) html += `<tr><td colspan="3" class="empty"><span class="dot checking"></span> Checking: ${esc(s.pending.join(", "))}</td></tr>`;
+  $("rows").innerHTML = html || `<tr><td colspan="3" class="empty">${s.checking ? "Checking…" : "No results yet"}</td></tr>`;
 
   renderGen();
 }
 
 function renderGen(){
   const s = status; if(!s) return;
-  const running = wasRunning;
-  const btn = $("genBtn");
+  const running = wasRunning, online = agentOnline();
   const blockers = s.results.filter(r=>r.status==="fail" && r.blocking).length;
-  btn.disabled = running || s.checking || !s.ready || !agentOnline() || !!pendingCmd;
-  if(!agentOnline() && !running){ $("genTitle").textContent="监控电脑未开启"; $("genSub").textContent=`只能在${windowText()}、监控电脑开着时生成。`; return; }
-  if(running){ $("genTitle").textContent="报告生成中…"; $("genSub").textContent="大约需要 5–10 分钟，可以关掉网页，稍后再回来看。"; }
-  else if(!s.checking && !s.results.length){ $("genTitle").textContent="还没检查"; $("genSub").textContent="先点“立即检查”，全部正常后才能生成。"; }
-  else if(s.checking){ $("genTitle").textContent="等待检查完成"; $("genSub").textContent="所有环节没问题后就可以生成。"; }
-  else if(s.ready){ $("genTitle").textContent="可以生成报告了"; $("genSub").textContent=$("noEmail").checked?"生成 PDF 后可以在这里下载。":"生成后会自动发邮件给 Leo（抄送 Yan）。"; }
-  else { $("genTitle").textContent=`还有 ${blockers} 个问题`; $("genSub").innerHTML=`先处理上面的红色问题。实在等不了可以 <button class="force" onclick="generate(true)">强制生成（会缺页）</button>`; }
+  $("genBtn").disabled = running || s.checking || !s.ready || !online || !!pendingCmd;
+  $("genBtn").textContent = s.mode === "monthly" ? `Generate ${s.month_label||"monthly"} PDF` : "Generate weekly PDF";
+  const t = $("genTitle"), sub = $("genSub");
+  if(running){ t.textContent="Generating the report…"; sub.textContent="Takes about 5–10 minutes. You can close this page and come back."; }
+  else if(!online){ t.textContent="Report PC offline"; sub.textContent=`Reports can only be generated ${windowText()} while the report PC is on.`; }
+  else if(!s.checking && !s.results.length){ t.textContent="Not checked yet"; sub.textContent="Run a check first — generate once everything is OK."; }
+  else if(s.checking){ t.textContent="Waiting for checks"; sub.textContent="Once everything is green you can generate the report."; }
+  else if(s.ready){ t.textContent="Ready to generate"; sub.textContent="Creates the PDF only — nothing is emailed. Download it when it's done and send it yourself."; }
+  else { t.textContent=`${blockers} ${blockers===1?"issue":"issues"} left`; sub.innerHTML=`Fix the red issues above first. If it can't wait: <button class="force" onclick="generate(true)">generate anyway (pages will be missing)</button>`; }
 }
 
-// ===================== Firebase 数据层 =====================
-const CFG = window.MONITOR_CONFIG;
-let KEY = (location.hash.match(/k=([\w-]+)/)||[])[1] || localStorage.getItem("monitorKey") || "";
-let agent = null, run = null, pendingCmd = null, refreshTimer = null;
+function lineClass(l){
+  if(/fail|error|traceback|not found|skipped|warning|missing|could not/i.test(l)) return /warning|skipped|missing|not sent/i.test(l) ? "w" : "e";
+  if(/created|\bok\b|validated|uploaded/i.test(l)) return "g";
+  return "";
+}
 
-const node = p => `${CFG.DATABASE_URL.replace(/\/$/,"")}/weeklyMonitor/${KEY}/${p}.json`;
+function renderRun(){
+  const j = run || {};
+  const any = j.running || j.started;
+  $("console").style.display = any ? "block" : "none";
+  $("runbar").style.display = any ? "flex" : "none";
+  wasRunning = !!j.running;
+  const key = (j.started||"") + "|" + (j.total||0);
+  if(key !== lastLogKey){
+    lastLogKey = key;
+    const c = $("console"), atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40 || !c.innerHTML;
+    c.innerHTML = (j.lines||[]).map(l=>`<div class="${lineClass(l)}">${esc(l)}</div>`).join("");
+    if(atBottom) c.scrollTop = c.scrollHeight;
+  }
+  if(j.running){
+    $("runDot").className = "dot checking"; $("runText").textContent = `Generating · started ${abs(j.started)}`; $("pdfBtn").style.display = "none";
+  } else if(j.started){
+    const ok = j.returncode === 0;
+    $("runDot").className = "dot " + (ok ? "ok" : "fail");
+    $("runText").textContent = ok ? `Last report ready · ${abs(j.finished)} — download it and email it yourself`
+                                  : `Last run failed (code ${j.returncode}) · please send the log to Leo`;
+    $("pdfBtn").style.display = ok ? "" : "none";
+  }
+  renderGen();
+}
+
+// ---------- Firebase ----------
+const node = p => `${CFG.DATABASE_URL.replace(/\/$/,"")}/${CFG.DATA_PATH}/${p}.json`;
 async function fbGet(p){ const r = await fetch(node(p), {cache:"no-store"}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
 async function fbPut(p, v){ const r = await fetch(node(p), {method:"PUT", body:JSON.stringify(v)}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
 
@@ -336,107 +448,51 @@ function norm(s){
   s.checking = !!s.checking; s.ready = !!s.ready;
   return s;
 }
-function hmOf(str){ const [h,m] = str.split(":").map(Number); return h*60+m; }
-function windowText(){
-  const names = "日一二三四五六";
-  return CFG.WINDOW_DAYS.map(d=>"周"+names[d]).join("、") + ` ${CFG.WINDOW[0]}–${CFG.WINDOW[1]}`;
-}
-function inWindowNow(){
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:CFG.TIMEZONE,weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false})
-                  .formatToParts(new Date()).map(p=>[p.type,p.value]));
-  const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(parts.weekday);
-  const mins = (Number(parts.hour)%24)*60 + Number(parts.minute);
-  return CFG.WINDOW_DAYS.includes(day) && mins >= hmOf(CFG.WINDOW[0]) && mins < hmOf(CFG.WINDOW[1]);
-}
-function agentOnline(){ return !!(agent && !agent.stopped && Date.now() - (agent.last_seen_ms||0) < 75000); }
 
 async function refresh(){
   clearTimeout(refreshTimer);
-  if(!KEY){ askKey(); return; }
   try{
     const [a, s, r, ack] = await Promise.all([fbGet("agent"), fbGet("status"), fbGet("run"), fbGet("command_ack")]);
     agent = a; status = norm(s); run = r;
-    if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "已执行" : "没有执行")); pendingCmd = null; }
-    if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("监控电脑没有响应，请确认它开着"); pendingCmd = null; }
+    if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "Done" : "Not run")); pendingCmd = null; }
+    if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("The report PC didn't respond — is it on?"); pendingCmd = null; }
     render(); renderRun();
   }catch(e){
-    $("checkedAt").textContent = String(e).includes("401") || String(e).includes("403")
-      ? "没有权限读取数据（访问码不对？）" : "连不上 Firebase：" + e.message;
+    $("checkedAt").textContent = /401|403/.test(e.message) ? "No permission to read data (check the Firebase rules)" : "Cannot reach Firebase: " + e.message;
   }
   const active = (status && status.checking) || (run && run.running) || pendingCmd;
   refreshTimer = setTimeout(refresh, active ? 2500 : 15000);
 }
 
-function askKey(){
-  const k = prompt("请输入访问码（Leo 提供的链接里 #k= 后面那串）：");
-  if(k){ KEY = k.trim(); localStorage.setItem("monitorKey", KEY); refresh(); }
-}
-
 async function sendCmd(cmd){
-  if(!agentOnline()){ toast("监控电脑不在线，命令发不出去"); return false; }
+  if(!agentOnline()){ toast("The report PC is offline"); return; }
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
   try{ await fbPut("command", {...cmd, id, at_ms: Date.now()}); }
-  catch(e){ toast("发送失败：" + e.message); return false; }
+  catch(e){ toast("Couldn't send: " + e.message); return; }
   pendingCmd = {id, at: Date.now()};
-  toast("已发送到监控电脑…");
+  toast("Sent to the report PC…");
   setTimeout(refresh, 1500);
-  return true;
 }
-
 function recheck(){ sendCmd({type:"check"}); }
 function generate(force){
-  if(force && !confirm("还有问题没解决，强制生成的报告会缺页。确定吗？")) return;
-  sendCmd({type:"generate", force, no_email:$("noEmail").checked, as_of:$("asOf").value || null});
+  if(force && !confirm("There are unresolved issues — the PDF will be missing pages. Continue?")) return;
+  sendCmd({type:"generate", force, as_of:$("asOf").value || null});
 }
 
 async function downloadPdf(){
-  toast("正在下载…");
+  toast("Downloading…");
   try{
     const f = await fbGet("files/pdf");
-    if(!f || !f.b64){ const m = await fbGet("files/pdf_meta"); toast(m && m.reason ? m.reason : "还没有可下载的 PDF"); return; }
+    if(!f || !f.b64){ const m = await fbGet("files/pdf_meta"); toast(m && m.reason ? m.reason : "No PDF available yet"); return; }
     const bytes = Uint8Array.from(atob(f.b64), c => c.charCodeAt(0));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
     a.download = f.name || "weekly_report.pdf"; a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
-  }catch(e){ toast("下载失败：" + e.message); }
-}
-
-function lineClass(l){
-  if(/fail|error|traceback|not found|skipped|warning|missing|could not/i.test(l)) return /warning|skipped|missing/i.test(l) ? "w" : "e";
-  if(/created|sent|\bok\b|validated|PDF created/i.test(l)) return "g";
-  return "";
-}
-
-let lastLogKey = "";
-function renderRun(){
-  const j = run || {};
-  const any = j.running || j.started;
-  $("console").style.display = any ? "block" : "none";
-  $("runbar").style.display = any ? "flex" : "none";
-  wasRunning = !!j.running;
-  const lines = j.lines || [];
-  const key = (j.started||"") + "|" + (j.total||0);
-  if(key !== lastLogKey){
-    lastLogKey = key;
-    const c = $("console"), atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40 || !c.innerHTML;
-    c.innerHTML = lines.map(l=>`<div class="${lineClass(l)}">${esc(l)}</div>`).join("");
-    if(atBottom) c.scrollTop = c.scrollHeight;
-  }
-  if(j.running){
-    $("runDot").className = "dot checking"; $("runText").textContent = `生成中 · 开始于 ${abs(j.started)}`; $("pdfBtn").style.display = "none";
-  } else if(j.started){
-    const ok = j.returncode === 0;
-    $("runDot").className = "dot " + (ok ? "ok" : "fail");
-    $("runText").textContent = ok ? `上次生成完成 · ${abs(j.finished)}` : `上次运行出错（代码 ${j.returncode}）· 请把日志发给 Leo`;
-    $("pdfBtn").style.display = ok ? "" : "none";
-  }
-  renderGen();
+  }catch(e){ toast("Download failed: " + e.message); }
 }
 
 $("asOf").value = new Date(Date.now() - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
-$("noEmail").addEventListener("change", renderGen);
-if(location.hash.includes("k=")){ localStorage.setItem("monitorKey", KEY); history.replaceState(null, "", location.pathname); }
 refresh();
 </script>
 </body>
