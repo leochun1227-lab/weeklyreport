@@ -171,6 +171,7 @@ const GROUPS = ["SAP","Email","Data sources","Environment","Last run","Other"];
 const STATUS_TEXT = {ok:"OK", warn:"Warning", fail:"Problem", info:"—"};
 const CFG = window.MONITOR_CONFIG;
 let status = null, agent = null, run = null, pendingCmd = null, refreshTimer = null, wasRunning = false, lastLogKey = "";
+let autoChecked = false;   // the page checks once by itself when it is opened
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -320,7 +321,11 @@ function render(){
       Make sure that PC is on and signed in, then run start_agent.bat. If that doesn't help, contact Leo. Results below are from the last check.</p></div>`;
   } else if(!online){
     hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>Outside check hours</h2><p>Checks run automatically ${esc(windowText())}, every 10 minutes.${s.finished?` Showing results from ${esc(abs(s.finished))}.`:""}</p></div>`;
+    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>Outside check hours</h2><p>The report PC is available ${esc(windowText())} — click Re-check then.${s.finished?` Showing results from ${esc(abs(s.finished))}.`:""}</p></div>`;
+  } else if(!s.checking && s.finished && (Date.now() - new Date(s.finished)) > 30*60*1000){
+    hero.className="card hero checking";
+    hero.innerHTML=`<div class="icon">↻</div><div class="grow"><h2>Results are from ${esc(abs(s.finished))}</h2><p>Click Re-check to see the current status.</p></div>
+      <button class="btn-primary big" onclick="recheck()">Re-check now</button>`;
   } else if(!s.checking && !res.length){
     hero.className="card hero checking";
     hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>No results yet</h2><p>Run a check now.</p></div>
@@ -468,6 +473,11 @@ async function refresh(){
     if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "Done" : "Not run")); pendingCmd = null; }
     if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("The report PC didn't respond — is it on?"); pendingCmd = null; }
     render(); renderRun();
+    // first visit: check once automatically (only when the report PC is online and idle)
+    if(!autoChecked && agentOnline() && !status.checking && !(run && run.running) && !pendingCmd){
+      autoChecked = true;
+      sendCmd({type:"check"});
+    }
   }catch(e){
     $("checkedAt").textContent = /401|403/.test(e.message) ? "No permission to read data (check the Firebase rules)" : "Cannot reach Firebase: " + e.message;
   }
