@@ -329,7 +329,7 @@ function render(){
     hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>No problems so far, still checking…</h2><p>Remaining: ${esc(s.pending.join(", "))}</p></div>`;
   } else {
     hero.className="card hero ok";
-    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"All data sources are OK and all three emails have arrived"}</p></div>
+    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"All data sources are OK and the report emails have arrived"}</p></div>
       <button class="btn-primary big" onclick="document.getElementById('genBtn').scrollIntoView({behavior:'smooth',block:'center'})">Generate ↓</button>`;
   }
 
