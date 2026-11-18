@@ -219,7 +219,7 @@ function inWindowNow(){
   const mins = (Number(parts.hour)%24)*60 + Number(parts.minute);
   const dt = new Intl.DateTimeFormat("en-CA",{timeZone:CFG.TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const [Y,M,D] = dt.split("-").map(Number), last = new Date(Y, M, 0).getDate();
-  const monthEnd = CFG.MONTH_END_DAYS && (D > last - 5 || D < 5);
+  const monthEnd = CFG.MONTH_END_DAYS && (D > last - 5 || D <= 9);
   return (CFG.WINDOW_DAYS.includes(day) || monthEnd) && mins >= hmOf(CFG.WINDOW[0]) && mins < hmOf(CFG.WINDOW[1]);
 }
 function agentOnline(){ return !!(agent && !agent.stopped && Date.now() - (agent.last_seen_ms||0) < 75000); }

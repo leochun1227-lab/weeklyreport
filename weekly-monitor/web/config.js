@@ -7,5 +7,5 @@ window.MONITOR_CONFIG = {
   TIMEZONE: "Australia/Sydney",
   WINDOW_DAYS: [1],          // 1 = Monday (JS weekday: 0 Sun … 6 Sat)
   WINDOW: ["09:00", "15:00"],
-  MONTH_END_DAYS: true,      // also the last 5 days of a month + the 1st–4th (monthly report)
+  MONTH_END_DAYS: true,      // also the last 5 days of a month + the 1st–9th (monthly report)
 };
