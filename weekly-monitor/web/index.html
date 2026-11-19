@@ -359,11 +359,12 @@ function render(){
     const val = cls === "checking" ? "Checking" : cls === "fail" ? badText : cls === "warn" ? "Check below" : list.length ? okText : "—";
     return `<div class="stage ${cls}"><div class="lab">${lab}</div><div class="val"><span class="dot ${cls}"></span>${val}</div><div class="note">${esc(note)}</div></div>`;
   };
-  const ppl = emails.filter(r=>r.id.startsWith("person_"));
+  // one line per report email: "✓ Jake  ✗ Mark" (taken from "… email from Jake")
+  const ppl = emails.filter(r=>r.id.startsWith("kind_")).map(r=>({...r, title: (r.title.match(/from (\S+)/)||[,r.title])[1]}));
   $("pipe").innerHTML =
     box("SAP", "sap", sapList, "Working", "Down", sapBad.length ? "Waiting for Longtree IT" : "") +
     box(monthly ? "Month-end emails" : "Emails", "email", emails, "OK", "Action needed",
-        ppl.map(r=>(r.status==="ok"?"✓ ":"✗ ")+r.title.replace("Email from ","")).join("  ")) +
+        ppl.map(r=>(r.status==="fail"?"✗ ":"✓ ")+r.title).join("  ")) +
     box("Other", "other", others.filter(r=>r.status==="fail"), "OK", "Contact Leo", otherBad.length ? "Details: All checks below" : "");
 
   // what the assistant needs to act on
