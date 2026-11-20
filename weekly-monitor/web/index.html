@@ -149,7 +149,7 @@
       <label id="asOfWrap">Report date <input type="date" id="asOf"></label>
       <button class="btn-primary big" id="genBtn" onclick="generate(false)" disabled>Generate PDF</button>
     </div>
-    <div class="runbar" id="runbar"><span class="dot checking" id="runDot"></span><span id="runText"></span><span style="flex:1"></span><button class="btn-primary" id="pdfBtn" onclick="downloadPdf()" style="display:none">⇩ Download PDF</button></div>
+    <div class="runbar" id="runbar"><span class="dot checking" id="runDot"></span><span id="runText"></span><span style="flex:1"></span><button class="btn-primary" id="pdfBtn" onclick="downloadPdf()" style="display:none">⇩ Download again</button></div>
     <div class="console" id="console"></div>
   </div>
 
@@ -445,10 +445,11 @@ function renderRun(){
     $("runDot").className = "dot checking"; $("runText").textContent = `Generating · started ${abs(j.started)}`; $("pdfBtn").style.display = "none";
   } else if(j.started){
     const ok = j.returncode === 0;
-    $("runDot").className = "dot " + (ok ? "ok" : "fail");
-    $("runText").textContent = ok ? `Last report ready · ${abs(j.finished)} — download it and email it yourself`
-                                  : `Last run failed (code ${j.returncode}) · please send the log to Leo`;
-    $("pdfBtn").style.display = ok ? "" : "none";
+    $("runDot").className = "dot " + (ok ? (pdfFresh() ? "ok" : "checking") : "fail");
+    $("runText").textContent = !ok ? `Last run failed (code ${j.returncode}) · please send the log to Leo`
+      : pdfFresh() ? `Report ready · ${abs(j.finished)} — the PDF has been downloaded to this computer. Email it yourself`
+      : "Report finished — downloading the PDF…";
+    $("pdfBtn").style.display = ok && pdfFresh() ? "" : "none";
   }
   renderGen();
 }
@@ -469,8 +470,10 @@ function norm(s){
 async function refresh(){
   clearTimeout(refreshTimer);
   try{
-    const [a, s, r, ack] = await Promise.all([fbGet("agent"), fbGet("status"), fbGet("run"), fbGet("command_ack")]);
-    agent = a; status = norm(s); run = r;
+    const [a, s, r, ack, meta] = await Promise.all([fbGet("agent"), fbGet("status"), fbGet("run"), fbGet("command_ack"),
+                                                   fbGet("files/pdf_meta")]);
+    agent = a; status = norm(s); run = r; pdfMeta = meta;
+    autoDownload();
     if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "Done" : "Not run")); pendingCmd = null; }
     if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("The report PC didn't respond — is it on?"); pendingCmd = null; }
     render(); renderRun();
@@ -482,7 +485,9 @@ async function refresh(){
   }catch(e){
     $("checkedAt").textContent = /401|403/.test(e.message) ? "No permission to read data (check the Firebase rules)" : "Cannot reach Firebase: " + e.message;
   }
-  const active = (status && status.checking) || (run && run.running) || pendingCmd;
+  const waitingPdf = run && !run.running && run.returncode === 0 && !pdfFresh()
+                     && Date.now() - new Date(run.finished || 0).getTime() < 15 * 60e3;
+  const active = (status && status.checking) || (run && run.running) || pendingCmd || waitingPdf;
   refreshTimer = setTimeout(refresh, active ? 2500 : 15000);
 }
 
@@ -498,7 +503,28 @@ async function sendCmd(cmd){
 function recheck(){ sendCmd({type:"check"}); }
 function generate(force){
   if(force && !confirm("There are unresolved issues — the PDF will be missing pages. Continue?")) return;
+  justGenerated = true;
   sendCmd({type:"generate", force, as_of:$("asOf").value || null});
+}
+
+// ---------- the new PDF downloads by itself as soon as it is ready ----------
+let pdfMeta = null, justGenerated = false;
+function pdfFresh(){   // PDF on Firebase belongs to the latest run (not an older report)
+  const m = pdfMeta;
+  if(!m || !m.uploaded || !m.at) return false;
+  return !(run && run.started) || (!run.running && m.at >= run.started);
+}
+function lastDownloaded(v){
+  try{ if(v !== undefined) localStorage.setItem("weeklyPdfDownloadedAt", v); return localStorage.getItem("weeklyPdfDownloadedAt"); }
+  catch(e){ return v === undefined ? window._pdfAt || null : (window._pdfAt = v); }
+}
+function autoDownload(){
+  if(!pdfFresh()) return;
+  const at = pdfMeta.at;
+  if(lastDownloaded() === at) return;                         // this PDF was already downloaded here
+  const recent = Date.now() - new Date(at).getTime() < 3 * 3600e3;   // don't pull an old report on a first visit
+  lastDownloaded(at);
+  if(recent || justGenerated){ justGenerated = false; downloadPdf(); }
 }
 
 async function downloadPdf(){
