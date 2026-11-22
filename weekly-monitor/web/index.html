@@ -364,7 +364,7 @@ function render(){
   $("pipe").innerHTML =
     box("SAP", "sap", sapList, "Working", "Down", sapBad.length ? "Waiting for Longtree IT" : "") +
     box(monthly ? "Month-end emails" : "Emails", "email", emails, "OK", "Action needed",
-        ppl.map(r=>(r.status==="fail"?"✗ ":"✓ ")+r.title).join("  ")) +
+        ppl.map(r=>(r.status==="fail"?"✗ ":"✓ ")+r.title+(/^Using (selected|uploaded)/.test(r.summary)?" (picked by hand)":"")).join("  ")) +
     box("Other", "other", others.filter(r=>r.status==="fail"), "OK", "Contact Leo", otherBad.length ? "Details: All checks below" : "");
 
   // what the assistant needs to act on
