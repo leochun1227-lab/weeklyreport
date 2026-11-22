@@ -428,9 +428,13 @@ function lineClass(l){
   return "";
 }
 
+// a report only counts for the week it was generated in: from this Monday 00:00 (local time)
+function weekStart(){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+function runIsCurrent(j){ return !!(j && j.started) && new Date(j.started) >= weekStart(); }
+
 function renderRun(){
   const j = run || {};
-  const any = j.running || j.started;
+  const any = j.running || runIsCurrent(j);      // last week's report is not shown or downloadable
   $("console").style.display = any ? "block" : "none";
   $("runbar").style.display = any ? "flex" : "none";
   wasRunning = !!j.running;
@@ -443,6 +447,8 @@ function renderRun(){
   }
   if(j.running){
     $("runDot").className = "dot checking"; $("runText").textContent = `Generating · started ${abs(j.started)}`; $("pdfBtn").style.display = "none";
+  } else if(!runIsCurrent(j)){
+    $("pdfBtn").style.display = "none";
   } else if(j.started){
     const ok = j.returncode === 0;
     $("runDot").className = "dot " + (ok ? (pdfFresh() ? "ok" : "checking") : "fail");
@@ -509,9 +515,9 @@ function generate(force){
 
 // ---------- the new PDF downloads by itself as soon as it is ready ----------
 let pdfMeta = null, justGenerated = false;
-function pdfFresh(){   // PDF on Firebase belongs to the latest run (not an older report)
+function pdfFresh(){   // PDF on Firebase belongs to the latest run of THIS week (not an older report)
   const m = pdfMeta;
-  if(!m || !m.uploaded || !m.at) return false;
+  if(!m || !m.uploaded || !m.at || new Date(m.at) < weekStart()) return false;
   return !(run && run.started) || (!run.running && m.at >= run.started);
 }
 function lastDownloaded(v){
@@ -528,6 +534,7 @@ function autoDownload(){
 }
 
 async function downloadPdf(){
+  if(!pdfFresh()){ toast("No report generated this week yet"); return; }
   toast("Downloading…");
   try{
     const f = await fbGet("files/pdf");
