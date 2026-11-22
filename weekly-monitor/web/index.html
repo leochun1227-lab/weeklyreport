@@ -3,500 +3,144 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Weekly Report Health Check · Regent RV</title>
+<title>Weekly Report · Regent RV</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
   :root{
-    --ink:#0f172a;--text:#334155;--muted:#64748b;--faint:#94a3b8;--grid:#e2e8f0;--panel:#f8fafc;--bg:#f4f6fa;
-    --indigo:#4f46e5;--indigo-l:#eef2ff;--emerald:#059669;--emerald-l:#ecfdf5;--amber:#d97706;--amber-l:#fffbeb;
-    --rose:#e11d48;--rose-l:#fff1f2;--radius:12px;
+    --ink:#0f172a;--text:#334155;--muted:#64748b;--faint:#94a3b8;--line:#e2e8f0;--panel:#f8fafc;--bg:#f4f6fa;
+    --indigo:#4f46e5;--indigo-l:#eef2ff;--green:#059669;--green-l:#ecfdf5;--green-m:#a7f3d0;
+    --amber:#d97706;--amber-l:#fffbeb;--red:#e11d48;--red-l:#fff1f2;--red-m:#fecdd3;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Inter",system-ui,sans-serif}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px}
-  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
-  h1{margin:0;font-size:24px;color:var(--ink);letter-spacing:-.01em}
-  .sub{color:var(--muted);font-size:13px;margin-top:2px}
-  button,.btn{font:inherit;border:1px solid var(--grid);background:#fff;color:var(--ink);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .wrap{max-width:1080px;margin:0 auto;padding:30px 24px 60px}
+  button,.btn{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:7px 14px;cursor:pointer;
+    font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
   button:hover,.btn:hover{border-color:#cbd5e1;background:var(--panel)}
-  button:disabled{opacity:.45;cursor:not-allowed}
-  .btn-primary{background:var(--indigo);border-color:var(--indigo);color:#fff}
-  .btn-primary:hover{background:#4338ca;border-color:#4338ca}
-  .btn-mail{background:var(--rose);border-color:var(--rose);color:#fff}
-  .btn-mail:hover{background:#be123c;border-color:#be123c}
-  .card{background:#fff;border:1px solid var(--grid);border-radius:var(--radius)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .ti{font-size:17px}
 
-  /* hero */
-  .hero{display:flex;align-items:center;gap:20px;padding:22px 24px;margin-bottom:16px}
-  .hero .icon{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:700;flex:none}
-  .hero.ok .icon{background:var(--emerald-l);color:var(--emerald)}
-  .hero.fail .icon{background:var(--rose-l);color:var(--rose)}
-  .hero.checking .icon{background:var(--indigo-l);color:var(--indigo)}
-  .hero h2{margin:0;font-size:22px;color:var(--ink)}
-  .hero p{margin:2px 0 0;color:var(--muted)}
-  .hero .grow{flex:1}
+  /* top bar */
+  .top{display:flex;align-items:center;gap:14px;margin-bottom:26px;flex-wrap:wrap}
+  .top h1{margin:0;font-size:24px;color:var(--ink);flex:1;letter-spacing:-.01em}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .seg button{border:none;border-radius:0;padding:7px 18px;color:var(--muted)}
+  .seg button.on{background:var(--ink);color:#fff}
+  input[type=month],input[type=date]{font:inherit;border:1px solid var(--line);border-radius:9px;padding:6px 9px;background:#fff;color:var(--ink)}
 
-  /* pipeline */
-  .pipe{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:22px;overflow:hidden}
-  .stage{padding:14px 16px;border-right:1px solid var(--grid);position:relative}
-  .stage:last-child{border-right:none}
-  .stage .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-  .stage .val{font-size:20px;font-weight:700;color:var(--ink);margin-top:2px;display:flex;align-items:center;gap:8px}
-  .stage .note{font-size:12px;color:var(--faint)}
-  .stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--grid)}
-  .stage.ok::after{background:var(--emerald)} .stage.warn::after{background:var(--amber)}
-  .stage.fail::after{background:var(--rose)} .stage.checking::after{background:var(--indigo);animation:pulse 1.2s infinite}
+  /* flow: sources -> generate */
+  .flow{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) 84px minmax(0,0.95fr);align-items:center}
+  .srcs{display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+  .src{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;transition:border-color .2s,background .2s}
+  .src .row{display:flex;align-items:center;gap:14px}
+  .src .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;background:var(--panel);color:var(--faint)}
+  .src .ic .ti{font-size:23px}
+  .src .nm{font-size:16px;font-weight:600;color:var(--ink);flex:1}
+  .pill{font-size:12.5px;font-weight:600;padding:3px 11px;border-radius:99px;background:var(--panel);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+  .src.ok .ic{background:var(--green-l);color:var(--green)} .src.ok .pill{background:var(--green-l);color:var(--green)}
+  .src.warn .ic{background:var(--amber-l);color:var(--amber)} .src.warn .pill{background:var(--amber-l);color:var(--amber)}
+  .src.fail{border-color:var(--red-m);background:var(--red-l)}
+  .src.fail .ic{background:#fff;color:var(--red)} .src.fail .pill{background:#fff;color:var(--red)}
+  .src.wait .ic{background:var(--indigo-l);color:var(--indigo)} .src.wait .pill{background:var(--indigo-l);color:var(--indigo)}
+  .src .iss{margin:12px 0 0 58px;color:var(--red);font-weight:600}
+  .src.warn .iss{color:var(--amber)}
+  .src .acts{display:flex;gap:8px;margin:10px 0 0 58px;flex-wrap:wrap}
+  .src .acts .btn,.src .acts button{padding:6px 12px;font-size:13px}
+  .src .acts .remind{background:var(--red);border-color:var(--red);color:#fff}
+  .src .acts .remind:hover{background:#be123c}
+  .src .pick{display:none;gap:8px;margin:10px 0 0 58px;flex-wrap:wrap}
+  .src .pick.open{display:flex}
+  .src .pick select{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;max-width:100%;flex:1;min-width:200px}
+  svg.lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:0;pointer-events:none}
+  svg.lines path{transition:stroke .3s}
 
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;background:var(--faint)}
-  .dot.ok{background:var(--emerald)} .dot.warn{background:var(--amber)} .dot.fail{background:var(--rose)}
-  .dot.info{background:var(--faint)} .dot.checking{background:var(--indigo);animation:pulse 1.2s infinite}
-  @keyframes pulse{50%{opacity:.35}}
+  .gen{position:relative;z-index:1;background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px 26px;text-align:center}
+  .gen .big{width:84px;height:84px;margin:0 auto 16px;border-radius:24px;display:grid;place-items:center;background:var(--panel);color:var(--faint)}
+  .gen .big .ti{font-size:42px}
+  .gen h2{margin:0 0 6px;font-size:21px;color:var(--ink)}
+  .gen .msg{margin:0 0 20px;font-weight:600;min-height:21px}
+  .gen .date{display:flex;justify-content:center;margin:0 0 14px}
+  .gen .go{width:100%;padding:13px;font-size:16px;border-radius:12px;background:var(--indigo);border-color:var(--indigo);color:#fff}
+  .gen .go:hover{background:#4338ca}
+  .gen .go:disabled{background:#c7d2fe;border-color:#c7d2fe;opacity:1;color:#fff}
+  .gen .sec{width:100%;padding:11px;border-radius:12px;margin-top:10px}
+  .gen .force{width:100%;margin-top:10px;border:none;background:none;color:var(--faint);font-weight:500}
+  .gen .force:hover{color:var(--red);background:none}
+  .gen.ok .big{background:var(--green-l);color:var(--green)} .gen.ok .msg{color:var(--green)}
+  .gen.fail .big{background:var(--red-l);color:var(--red)} .gen.fail .msg{color:var(--red)}
+  .gen.busy .big{background:var(--indigo-l);color:var(--indigo)} .gen.busy .msg{color:var(--indigo)}
+  .gen.idle .msg{color:var(--muted)}
+  .bar{height:8px;border-radius:99px;background:var(--panel);overflow:hidden;margin:0 0 6px}
+  .bar i{display:block;height:100%;background:var(--indigo);border-radius:99px;transition:width .6s}
+  .spin{animation:spin 1.1s linear infinite} @keyframes spin{to{transform:rotate(360deg)}}
 
-  .section-title{font-size:13px;font-weight:700;color:var(--ink);margin:26px 0 10px;display:flex;align-items:center;gap:8px}
-  .section-title .count{background:var(--rose);color:#fff;border-radius:99px;font-size:11px;padding:1px 8px}
-
-  /* problem cards */
-  .issues{display:grid;gap:10px}
-  .issue{padding:16px 18px;border-left:4px solid var(--rose);display:grid;grid-template-columns:1fr auto;gap:6px 18px;align-items:start}
-  .issue.warn{border-left-color:var(--amber)}
-  .issue .t{font-weight:700;color:var(--ink);font-size:15px;display:flex;align-items:center;gap:8px}
-  .issue .s{color:var(--text)}
-  .issue .fix{grid-column:1/2;background:var(--panel);border-radius:8px;padding:9px 12px;color:var(--ink)}
-  .issue .fix b{color:var(--indigo)}
-  .issue .acts{grid-column:2/3;grid-row:1/4;display:flex;flex-direction:column;gap:8px;align-items:stretch}
-  .issue .when{font-size:12px;color:var(--faint)}
-
-  /* table */
-  table{width:100%;border-collapse:collapse}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:10px 16px;border-bottom:1px solid var(--grid);background:var(--panel)}
-  td{padding:11px 16px;border-bottom:1px solid var(--grid);vertical-align:top}
+  /* details for Leo (collapsed) */
+  details.more{margin-top:34px}
+  details.more summary{cursor:pointer;color:var(--faint);font-size:12px;list-style:none;text-align:center}
+  details.more summary::-webkit-details-marker{display:none}
+  .tbl{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
   tr:last-child td{border-bottom:none}
-  tr.grp td{background:#fbfcfe;font-size:11px;font-weight:700;color:var(--indigo);text-transform:uppercase;letter-spacing:.05em;padding:7px 16px}
-  td.name{font-weight:600;color:var(--ink);white-space:nowrap}
-  td.name .dot{margin-right:9px;vertical-align:1px}
-  td.upd{white-space:nowrap;color:var(--text)}
-  td.upd small{display:block;color:var(--faint);font-size:11px}
-  .stat{font-weight:600}
-  .stat.ok{color:var(--emerald)} .stat.warn{color:var(--amber)} .stat.fail{color:var(--rose)} .stat.info{color:var(--muted)}
-  details summary{cursor:pointer;color:var(--faint);font-size:12px;list-style:none}
-  details summary::-webkit-details-marker{display:none}
-  pre.detail{white-space:pre-wrap;font:12px/1.5 Consolas,monospace;color:var(--muted);margin:6px 0 0;background:var(--panel);padding:8px 10px;border-radius:6px}
+  td.n{font-weight:600;color:var(--ink);white-space:nowrap}
+  .s-ok{color:var(--green)} .s-warn{color:var(--amber)} .s-fail{color:var(--red)} .s-info{color:var(--muted)}
+  .console{background:#0b1020;color:#cbd5e1;border-radius:10px;font:12px/1.55 Consolas,monospace;max-height:280px;overflow:auto;padding:12px 14px;white-space:pre-wrap;margin-top:12px}
 
-  /* generate */
-  .gen{padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
-  .gen h3{margin:0;font-size:17px;color:var(--ink)}
-  .gen p{margin:3px 0 0;color:var(--muted)}
-  .gen .ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-  .gen label{display:flex;gap:6px;align-items:center;color:var(--text);font-size:13px}
-  .gen input[type=date]{font:inherit;border:1px solid var(--grid);border-radius:8px;padding:5px 8px}
-  .big{font-size:16px;padding:11px 26px}
-  .force{background:none;border:none;color:var(--faint);font-weight:500;text-decoration:underline;padding:0}
-  .force:hover{background:none;color:var(--rose)}
-  .console{grid-column:1/3;background:#0b1020;color:#cbd5e1;border-radius:10px;font:12px/1.55 Consolas,monospace;height:320px;overflow:auto;padding:12px 14px;white-space:pre-wrap;display:none}
-  .console .e{color:#fda4af} .console .w{color:#fcd34d} .console .g{color:#6ee7b7}
-  .runbar{grid-column:1/3;display:none;align-items:center;gap:12px;font-weight:600}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.show{opacity:1}
-  .empty{padding:18px;color:var(--muted)}
-  .seg{display:inline-flex;border:1px solid var(--grid);border-radius:9px;overflow:hidden;background:#fff}
-  .seg button{border:none;border-radius:0;padding:7px 16px;font-weight:600;color:var(--muted);background:#fff}
-  .seg button.on{background:var(--indigo);color:#fff}
-  .seg button:not(.on):hover{background:var(--panel)}
-  .modebar{display:flex;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
-  .modebar .hint{color:var(--muted);font-size:13px}
-  .modebar input[type=month]{font:inherit;border:1px solid var(--grid);border-radius:8px;padding:5px 8px}
-  .manual{display:flex;flex-direction:column;gap:6px;min-width:250px}
-  .manual select{font:inherit;font-size:12.5px;border:1px solid var(--grid);border-radius:8px;padding:6px;max-width:330px}
-  .manual .row{display:flex;gap:6px}
-  .manual small{color:var(--faint)}
-  @media (max-width:820px){.pipe{grid-template-columns:repeat(2,1fr)}.issue{grid-template-columns:1fr}.issue .acts{grid-column:1;grid-row:auto;flex-direction:row;flex-wrap:wrap}.gen{grid-template-columns:1fr}.console,.runbar{grid-column:1}td.upd,th.upd{display:none}}
+  @media (max-width:820px){.flow{grid-template-columns:1fr;gap:18px}.flow .gap{display:none}svg.lines{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>Report Health Check</h1>
-      <div class="sub">Regent RV · <span id="checkedAt">Loading…</span></div>
-    </div>
-    <button id="recheck" onclick="recheck()">↻ Re-check</button>
-  </header>
-
-  <div class="modebar">
-    <div class="seg" id="seg"><button id="segW" onclick="switchMode('weekly')">Weekly</button><button id="segM" onclick="switchMode('monthly')">Monthly</button></div>
-    <span id="monthWrap" style="display:none"><input type="month" id="monthPick" onchange="switchMode('monthly')"></span>
-    <span class="hint" id="modeHint"></span>
+  <div class="top">
+    <h1>Regent RV Report</h1>
+    <div class="seg"><button id="segW" onclick="switchMode('weekly')">Weekly</button><button id="segM" onclick="switchMode('monthly')">Monthly</button></div>
+    <input type="month" id="monthPick" style="display:none" onchange="switchMode('monthly')">
+    <button id="recheck" onclick="recheck()"><i class="ti ti-refresh"></i>Re-check</button>
   </div>
 
-  <div id="hero" class="card hero checking">
-    <div class="icon">…</div>
-    <div class="grow"><h2>Loading</h2><p>Reading the latest results…</p></div>
+  <div class="flow" id="flow">
+    <svg class="lines" id="lines"></svg>
+    <div class="srcs" id="srcs"></div>
+    <div class="gap"></div>
+    <div class="gen idle" id="gen"></div>
   </div>
 
-  <div id="pipe" class="card pipe"></div>
-
-  <div id="issuesWrap" style="display:none">
-    <div class="section-title">Needs attention <span class="count" id="issueCount">0</span></div>
-    <div class="issues" id="issues"></div>
-  </div>
-
-  <div class="section-title">Generate report</div>
-  <div class="card gen">
-    <div>
-      <h3 id="genTitle">Waiting for checks</h3>
-      <p id="genSub">Once everything is green you can generate the report.</p>
-    </div>
-    <div class="ctl">
-      <label id="asOfWrap">Report date <input type="date" id="asOf"></label>
-      <button class="btn-primary big" id="genBtn" onclick="generate(false)" disabled>Generate PDF</button>
-    </div>
-    <div class="runbar" id="runbar"><span class="dot checking" id="runDot"></span><span id="runText"></span><span style="flex:1"></span><button class="btn-primary" id="pdfBtn" onclick="downloadPdf()" style="display:none">⇩ Download again</button></div>
+  <details class="more" id="more">
+    <summary>Details</summary>
+    <div class="tbl"><table><tbody id="rows"></tbody></table></div>
     <div class="console" id="console"></div>
-  </div>
-
-  <details id="allChecks">
-  <summary class="section-title" style="cursor:pointer;list-style:none">All checks <span style="color:var(--faint);font-weight:500">· click to show / hide</span></summary>
-  <div class="card" style="overflow:hidden">
-    <table>
-      <thead><tr><th style="width:30%">Check</th><th>Status</th><th class="upd" style="width:210px">Last updated</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
-    </table>
-  </div>
   </details>
 </div>
 <div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
 <script>
-const GROUPS = ["SAP","Email","Data sources","Environment","Last run","Other"];
-const STATUS_TEXT = {ok:"OK", warn:"Warning", fail:"Problem", info:"—"};
 const CFG = window.MONITOR_CONFIG;
-let status = null, agent = null, run = null, pendingCmd = null, refreshTimer = null, wasRunning = false, lastLogKey = "";
-let autoChecked = false;   // the page checks once by itself when it is opened
+let status = null, agent = null, run = null, pendingCmd = null, refreshTimer = null;
+let autoChecked = false;                 // the page checks once by itself when it is opened
+let pdfMeta = null, justGenerated = false;
+const openPick = {};                     // which "Pick email" lists are open
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-// ---------- formatting ----------
-function rel(isoStr){
-  if(!isoStr) return "";
-  const now = new Date();
-  if(isoStr.length <= 10){
-    const days = Math.round((new Date(now.toDateString()) - new Date(isoStr+"T00:00")) / 864e5);
-    return days <= 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`;
-  }
-  const s = (now - new Date(isoStr)) / 1000;
-  if(s < 90) return "just now";
-  if(s < 3600) return `${Math.round(s/60)} min ago`;
-  if(s < 86400) return `${Math.round(s/3600)} h ago`;
-  const d = Math.round(s/86400); return d === 1 ? "1 day ago" : `${d} days ago`;
-}
-function abs(isoStr){
-  if(!isoStr) return "";
-  const d = new Date(isoStr.length <= 10 ? isoStr+"T00:00" : isoStr);
-  const opt = isoStr.length <= 10 ? {weekday:"short",day:"numeric",month:"short"} :
-              {weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"};
-  return d.toLocaleString("en-AU", opt);
-}
-function clock(isoStr){ return new Date(isoStr).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2600); }
-
-function copyText(text){
-  if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(text).then(()=>toast("Copied")); return; }
-  const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); toast("Copied"); }catch(e){ prompt("Copy this:", text); }
-  ta.remove();
-}
-
-// ---------- window / agent ----------
-function hmOf(str){ const [h,m] = str.split(":").map(Number); return h*60+m; }
-function windowText(){
-  const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  return CFG.WINDOW_DAYS.map(d=>names[d]).join(", ") + (CFG.MONTH_END_DAYS ? " and month-end days" : "") + ` ${CFG.WINDOW[0]}–${CFG.WINDOW[1]}`;
-}
-function inWindowNow(){
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:CFG.TIMEZONE,weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false})
-                  .formatToParts(new Date()).map(p=>[p.type,p.value]));
-  const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(parts.weekday);
-  const mins = (Number(parts.hour)%24)*60 + Number(parts.minute);
-  const dt = new Intl.DateTimeFormat("en-CA",{timeZone:CFG.TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-  const [Y,M,D] = dt.split("-").map(Number), last = new Date(Y, M, 0).getDate();
-  const monthEnd = CFG.MONTH_END_DAYS && (D > last - 5 || D <= 9);
-  return (CFG.WINDOW_DAYS.includes(day) || monthEnd) && mins >= hmOf(CFG.WINDOW[0]) && mins < hmOf(CFG.WINDOW[1]);
-}
+function abs(iso){ if(!iso) return ""; return new Date(iso).toLocaleString("en-AU",{weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}); }
 function agentOnline(){ return !!(agent && !agent.stopped && Date.now() - (agent.last_seen_ms||0) < 75000); }
-
-// ---------- actions ----------
-function actionHtml(a, i, rid){
-  if(a.type === "mailto"){
-    const href = `mailto:${encodeURIComponent(a.to)}?subject=${encodeURIComponent(a.subject)}&body=${encodeURIComponent(a.body)}`;
-    return `<a class="btn btn-mail" href="${href}">✉ ${esc(a.label)}</a>
-            <button onclick="copyAction('${rid}',${i})">Copy reminder text</button>`;
-  }
-  if(a.type === "copy") return `<button onclick="copyAction('${rid}',${i})">⧉ ${esc(a.label)}</button>`;
-  if(a.type === "download") return `<button onclick="downloadPdf()">⇩ ${esc(a.label)}</button>`;
-  if(a.type === "pick_email"){
-    const opts = (a.options||[]).map(o=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join("");
-    return `<div class="manual"><small>Or use a specific email:</small>
-      <select id="pick-${a.kind}">${opts}</select>
-      <button onclick="pickEmail('${a.kind}')">Use this email</button></div>`;
-  }
-  if(a.type === "upload"){
-    return `<div class="manual"><small>Or upload the figures (screenshot, Excel or PDF):</small>
-      <input type="file" id="up-${a.kind}" accept="${esc(a.accept||"")}" multiple>
-      <button onclick="uploadFiles('${a.kind}')">⇧ Upload</button></div>`;
-  }
-  if(a.type === "clear_override") return `<button onclick="sendCmd({type:'clear_override',kind:'${a.kind}'})">↺ ${esc(a.label)}</button>`;
-  return "";
-}
-function pickEmail(kind){
-  const sel = document.getElementById("pick-"+kind); if(!sel || !sel.value){ toast("Choose an email first"); return; }
-  sendCmd({type:"pick_email", kind, entry_id: sel.value, label: sel.options[sel.selectedIndex].text});
-}
-async function uploadFiles(kind){
-  const inp = document.getElementById("up-"+kind);
-  const files = inp && inp.files ? Array.from(inp.files) : [];
-  if(!files.length){ toast("Choose a file first"); return; }
-  const total = files.reduce((n,f)=>n+f.size,0);
-  if(total > 9e6){ toast("Files are too large (max 9 MB in total)"); return; }
-  if(!agentOnline()){ toast("The report PC is offline"); return; }
-  toast("Uploading…");
-  const read = f => new Promise((ok,bad)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(",")[1]); r.onerror=bad; r.readAsDataURL(f); });
-  try{
-    const payload = {at: Date.now(), files: []};
-    for(const f of files) payload.files.push({name: f.name, type: f.type, b64: await read(f)});
-    await fbPut(`uploads/${kind}`, payload);
-  }catch(e){ toast("Upload failed: " + e.message); return; }
-  sendCmd({type:"upload", kind});
-}
-function switchMode(mode){
-  const month = $("monthPick").value || (status && status.default_month) || null;
-  if(status && status.mode === mode && (mode === "weekly" || status.month === month)) return;
-  sendCmd({type:"mode", mode, month});
-}
-function copyAction(rid, i){
-  const r = status.results.find(x => x.id === rid); const a = r.actions[i];
-  copyText(a.type === "mailto" ? `To: ${a.to}\nSubject: ${a.subject}\n\n${a.body}` : a.text);
-}
-
-function worst(list){
-  if(list.some(r=>r.status==="fail")) return "fail";
-  if(list.some(r=>r.status==="warn")) return "warn";
-  if(list.some(r=>r.status==="ok")) return "ok";
-  return "info";
-}
-
-// ---------- render ----------
-function render(){
-  const s = status, res = s.results;
-  const monthly = s.mode === "monthly";
-  $("segW").classList.toggle("on", !monthly); $("segM").classList.toggle("on", monthly);
-  $("monthWrap").style.display = monthly ? "" : "none";
-  if(monthly && s.month && document.activeElement !== $("monthPick")) $("monthPick").value = s.month;
-  $("asOfWrap").style.display = monthly ? "none" : "";
-  $("modeHint").textContent = monthly
-    ? `Monthly report · ${s.month_label||""} · month-end emails received ${s.month_window||""}`
-    : "Weekly report (Monday) · uses this week's emails";
-  const online = agentOnline(), inWin = inWindowNow();
-  if(!online) s.checking = false;
-  let when = s.checking ? "Checking…" : (s.finished ? `Checked ${abs(s.finished)} (${rel(s.finished)})` : "Not checked yet");
-  if(online && !s.checking && s.next_auto) when += ` · next auto-check ${clock(s.next_auto)}`;
-  when += online ? ` · report PC online${agent.host ? " ("+agent.host+")" : ""}` : " · report PC offline";
-  $("checkedAt").textContent = when;
-  $("recheck").disabled = s.checking || !online;
-
-  // hero
-  const hero = $("hero");
-  const blockers = res.filter(r=>r.status==="fail" && r.blocking);
-  // the assistant only sees three things: SAP, Emails, Other (Leo reads the details in All checks)
-  const sapList = res.filter(r=>r.id==="sap");
-  const emails = res.filter(r=>r.group==="Email");
-  const others = res.filter(r=>r.id!=="sap" && r.group!=="Email");
-  const sapBad = sapList.filter(r=>r.status==="fail");
-  const emailBlock = emails.filter(r=>r.status==="fail" && r.blocking);
-  const otherBad = others.filter(r=>r.status==="fail");
-  const lastSeen = agent && agent.last_seen ? abs(agent.last_seen) : "";
-  if(!online && inWin){
-    hero.className="card hero fail";
-    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>The report PC is not connected</h2><p>It's check time (${esc(windowText())}) but the monitor on the report PC isn't running${lastSeen?` (last seen ${esc(lastSeen)})`:""}.
-      Make sure that PC is on and signed in, then run start_agent.bat. If that doesn't help, contact Leo. Results below are from the last check.</p></div>`;
-  } else if(!online){
-    hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>Outside check hours</h2><p>The report PC is available ${esc(windowText())} — click Re-check then.${s.finished?` Showing results from ${esc(abs(s.finished))}.`:""}</p></div>`;
-  } else if(!s.checking && s.finished && (Date.now() - new Date(s.finished)) > 30*60*1000){
-    hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">↻</div><div class="grow"><h2>Results are from ${esc(abs(s.finished))}</h2><p>Click Re-check to see the current status.</p></div>
-      <button class="btn-primary big" onclick="recheck()">Re-check now</button>`;
-  } else if(!s.checking && !res.length){
-    hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">◷</div><div class="grow"><h2>No results yet</h2><p>Run a check now.</p></div>
-      <button class="btn-primary big" onclick="recheck()">Check now</button>`;
-  } else if(s.checking && !res.length){
-    hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>Checking every step</h2><p>SAP, email and the web apps take 1–2 minutes</p></div>`;
-  } else if(blockers.length){
-    hero.className="card hero fail";
-    const sapDown = sapBad.length > 0, mailBad = emailBlock.length > 0, otherDown = otherBad.length > 0;
-    const parts = [];
-    if(mailBad) parts.push("Emails: send a reminder, pick the right email, or upload the figures");
-    if(sapDown) parts.push("SAP is down: wait for Longtree IT to fix it");
-    if(otherDown) parts.push("Other: contact Leo");
-    hero.innerHTML=`<div class="icon">!</div><div class="grow"><h2>The report can't be generated in full yet</h2><p>${esc(parts.join(" · "))}${s.checking?" · still checking…":""}</p></div>`;
-  } else if(s.checking){
-    hero.className="card hero checking";
-    hero.innerHTML=`<div class="icon">…</div><div class="grow"><h2>No problems so far, still checking…</h2><p>This takes 1–2 minutes</p></div>`;
-  } else {
-    hero.className="card hero ok";
-    hero.innerHTML=`<div class="icon">✓</div><div class="grow"><h2>All clear — ready to generate the ${monthly?"monthly":"weekly"} report</h2><p>${monthly?`All month-end data for ${esc(s.month_label||"")} is in`:"SAP is working and the report emails have arrived"}</p></div>
-      <button class="btn-primary big" onclick="document.getElementById('genBtn').scrollIntoView({behavior:'smooth',block:'center'})">Generate ↓</button>`;
-  }
-
-  // three boxes for the assistant: SAP · Emails · Other
-  const pendingFor = cat => s.pending.some(p => cat === "sap" ? p === "SAP HANA connection" : cat === "email" ? p === "Outlook email"
-                                                 : p !== "SAP HANA connection" && p !== "Outlook email");
-  const box = (lab, cat, list, okText, badText, note) => {
-    const pend = pendingFor(cat);
-    let cls = list.some(r=>r.status==="fail") ? "fail" : pend ? "checking" : list.some(r=>r.status==="warn") && cat === "email" ? "warn" : list.length ? "ok" : "info";
-    const val = cls === "checking" ? "Checking" : cls === "fail" ? badText : cls === "warn" ? "Check below" : list.length ? okText : "—";
-    return `<div class="stage ${cls}"><div class="lab">${lab}</div><div class="val"><span class="dot ${cls}"></span>${val}</div><div class="note">${esc(note)}</div></div>`;
-  };
-  // one line per report email: "✓ Jake  ✗ Mark" (taken from "… email from Jake")
-  const ppl = emails.filter(r=>r.id.startsWith("kind_")).map(r=>({...r, title: (r.title.match(/from (\S+)/)||[,r.title])[1]}));
-  $("pipe").innerHTML =
-    box("SAP", "sap", sapList, "Working", "Down", sapBad.length ? "Waiting for Longtree IT" : "") +
-    box(monthly ? "Month-end emails" : "Emails", "email", emails, "OK", "Action needed",
-        ppl.map(r=>(r.status==="fail"?"✗ ":"✓ ")+r.title+(/^Using (selected|uploaded)/.test(r.summary)?" (picked by hand)":"")).join("  ")) +
-    box("Other", "other", others.filter(r=>r.status==="fail"), "OK", "Contact Leo", otherBad.length ? "Details: All checks below" : "");
-
-  // what the assistant needs to act on
-  const cards = [];
-  for(const r of emails.filter(r=>r.status==="fail" || (r.status==="warn" && r.suggestion))
-                       .sort((a,b)=>(a.status==="fail"?0:1)-(b.status==="fail"?0:1) || a.order-b.order)){
-    cards.push(`<div class="card issue ${r.status}">
-      <div class="t"><span class="dot ${r.status}"></span>${esc(r.title)}</div>
-      <div class="s">${esc(r.summary)} ${r.updated?`<span class="when">· ${esc(r.updated_label||"Updated")} ${abs(r.updated)} (${rel(r.updated)})</span>`:""}</div>
-      ${r.suggestion?`<div class="fix"><b>What to do:</b> ${esc(r.suggestion)}</div>`:""}
-      <div class="acts">${r.actions.map((a,i)=>actionHtml(a,i,r.id)).join("")}</div>
-    </div>`);
-  }
-  if(sapBad.length) cards.push(`<div class="card issue fail">
-      <div class="t"><span class="dot fail"></span>SAP is not working</div>
-      <div class="fix"><b>What to do:</b> Wait for Longtree IT to fix SAP, then click Re-check.</div></div>`);
-  if(otherBad.length) cards.push(`<div class="card issue fail">
-      <div class="t"><span class="dot fail"></span>Something else needs fixing</div>
-      <div class="fix"><b>What to do:</b> Contact Leo.</div></div>`);
-  $("issuesWrap").style.display = cards.length ? "" : "none";
-  $("issueCount").textContent = cards.length;
-  $("issues").innerHTML = cards.join("");
-
-  // table
-  let html = "";
-  for(const g of GROUPS){
-    const list = res.filter(r=>r.group===g);
-    if(!list.length) continue;
-    html += `<tr class="grp"><td colspan="3">${g}</td></tr>`;
-    html += list.map(r=>`<tr>
-      <td class="name"><span class="dot ${r.status}"></span>${esc(r.title)}</td>
-      <td><span class="stat ${r.status}">${STATUS_TEXT[r.status]}</span> · ${esc(r.summary)}
-        ${r.detail?`<details><summary>Details ▸</summary><pre class="detail">${esc(r.detail)}</pre></details>`:""}</td>
-      <td class="upd">${r.updated?`${esc(rel(r.updated))}<small>${esc(r.updated_label||"")} · ${esc(abs(r.updated))}</small>`:'<span style="color:var(--faint)">—</span>'}</td>
-    </tr>`).join("");
-  }
-  if(s.checking && s.pending.length) html += `<tr><td colspan="3" class="empty"><span class="dot checking"></span> Checking: ${esc(s.pending.join(", "))}</td></tr>`;
-  $("rows").innerHTML = html || `<tr><td colspan="3" class="empty">${s.checking ? "Checking…" : "No results yet"}</td></tr>`;
-
-  renderGen();
-}
-
-function renderGen(){
-  const s = status; if(!s) return;
-  const running = wasRunning, online = agentOnline();
-  const blockers = s.results.filter(r=>r.status==="fail" && r.blocking).length;
-  $("genBtn").disabled = running || s.checking || !s.ready || !online || !!pendingCmd;
-  $("genBtn").textContent = s.mode === "monthly" ? `Generate ${s.month_label||"monthly"} PDF` : "Generate weekly PDF";
-  const t = $("genTitle"), sub = $("genSub");
-  if(running){ t.textContent="Generating the report…"; sub.textContent="Takes about 5–10 minutes. You can close this page and come back."; }
-  else if(!online){ t.textContent="Report PC offline"; sub.textContent=`Reports can only be generated ${windowText()} while the report PC is on.`; }
-  else if(!s.checking && !s.results.length){ t.textContent="Not checked yet"; sub.textContent="Run a check first — generate once everything is OK."; }
-  else if(s.checking){ t.textContent="Waiting for checks"; sub.textContent="Once everything is green you can generate the report."; }
-  else if(s.ready){ t.textContent="Ready to generate"; sub.textContent="Creates the PDF only — nothing is emailed. Download it when it's done and send it yourself."; }
-  else { t.textContent=`${blockers} ${blockers===1?"issue":"issues"} left`; sub.innerHTML=`Fix the red issues above first. If it can't wait: <button class="force" onclick="generate(true)">generate anyway (pages will be missing)</button>`; }
-}
-
-function lineClass(l){
-  if(/fail|error|traceback|not found|skipped|warning|missing|could not/i.test(l)) return /warning|skipped|missing|not sent/i.test(l) ? "w" : "e";
-  if(/created|\bok\b|validated|uploaded/i.test(l)) return "g";
-  return "";
-}
-
-// a report only counts for the week it was generated in: from this Monday 00:00 (local time)
-function weekStart(){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
-function runIsCurrent(j){ return !!(j && j.started) && new Date(j.started) >= weekStart(); }
-
-function renderRun(){
-  const j = run || {};
-  const any = j.running || runIsCurrent(j);      // last week's report is not shown or downloadable
-  $("console").style.display = any ? "block" : "none";
-  $("runbar").style.display = any ? "flex" : "none";
-  wasRunning = !!j.running;
-  const key = (j.started||"") + "|" + (j.total||0);
-  if(key !== lastLogKey){
-    lastLogKey = key;
-    const c = $("console"), atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40 || !c.innerHTML;
-    c.innerHTML = (j.lines||[]).map(l=>`<div class="${lineClass(l)}">${esc(l)}</div>`).join("");
-    if(atBottom) c.scrollTop = c.scrollHeight;
-  }
-  if(j.running){
-    $("runDot").className = "dot checking"; $("runText").textContent = `Generating · started ${abs(j.started)}`; $("pdfBtn").style.display = "none";
-  } else if(!runIsCurrent(j)){
-    $("pdfBtn").style.display = "none";
-  } else if(j.started){
-    const ok = j.returncode === 0;
-    $("runDot").className = "dot " + (ok ? (pdfFresh() ? "ok" : "checking") : "fail");
-    $("runText").textContent = !ok ? `Last run failed (code ${j.returncode}) · please send the log to Leo`
-      : pdfFresh() ? `Report ready · ${abs(j.finished)} — the PDF has been downloaded to this computer. Email it yourself`
-      : "Report finished — downloading the PDF…";
-    $("pdfBtn").style.display = ok && pdfFresh() ? "" : "none";
-  }
-  renderGen();
-}
 
 // ---------- Firebase ----------
 const node = p => `${CFG.DATABASE_URL.replace(/\/$/,"")}/${CFG.DATA_PATH}/${p}.json`;
 async function fbGet(p){ const r = await fetch(node(p), {cache:"no-store"}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
 async function fbPut(p, v){ const r = await fetch(node(p), {method:"PUT", body:JSON.stringify(v)}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
-
 function norm(s){
   s = s || {};
-  s.results = (s.results || []).map(r => ({summary:"", detail:"", suggestion:"", updated_label:"", ...r, actions:r.actions || []}));
-  s.pending = s.pending || [];
-  s.checking = !!s.checking; s.ready = !!s.ready;
+  s.results = (s.results || []).map(r => ({summary:"", detail:"", suggestion:"", ...r, actions:r.actions || []}));
+  s.pending = s.pending || []; s.checking = !!s.checking; s.ready = !!s.ready;
   return s;
 }
 
-async function refresh(){
-  clearTimeout(refreshTimer);
-  try{
-    const [a, s, r, ack, meta] = await Promise.all([fbGet("agent"), fbGet("status"), fbGet("run"), fbGet("command_ack"),
-                                                   fbGet("files/pdf_meta")]);
-    agent = a; status = norm(s); run = r; pdfMeta = meta;
-    autoDownload();
-    if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "Done" : "Not run")); pendingCmd = null; }
-    if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("The report PC didn't respond — is it on?"); pendingCmd = null; }
-    render(); renderRun();
-    // first visit: check once automatically (only when the report PC is online and idle)
-    if(!autoChecked && agentOnline() && !status.checking && !(run && run.running) && !pendingCmd){
-      autoChecked = true;
-      sendCmd({type:"check"});
-    }
-  }catch(e){
-    $("checkedAt").textContent = /401|403/.test(e.message) ? "No permission to read data (check the Firebase rules)" : "Cannot reach Firebase: " + e.message;
-  }
-  const waitingPdf = run && !run.running && run.returncode === 0 && !pdfFresh()
-                     && Date.now() - new Date(run.finished || 0).getTime() < 15 * 60e3;
-  const active = (status && status.checking) || (run && run.running) || pendingCmd || waitingPdf;
-  refreshTimer = setTimeout(refresh, active ? 2500 : 15000);
-}
-
+// ---------- commands ----------
 async function sendCmd(cmd){
   if(!agentOnline()){ toast("The report PC is offline"); return; }
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
@@ -508,18 +152,206 @@ async function sendCmd(cmd){
 }
 function recheck(){ sendCmd({type:"check"}); }
 function generate(force){
-  if(force && !confirm("There are unresolved issues — the PDF will be missing pages. Continue?")) return;
+  if(force && !confirm("Some data is missing — the PDF will be missing pages. Continue?")) return;
   justGenerated = true;
-  sendCmd({type:"generate", force, as_of:$("asOf").value || null});
+  sendCmd({type:"generate", force, as_of:($("asOf") && $("asOf").value) || null});
+}
+function switchMode(mode){
+  const month = $("monthPick").value || (status && status.default_month) || null;
+  if(status && status.mode === mode && (mode === "weekly" || status.month === month)) return;
+  sendCmd({type:"mode", mode, month});
+}
+function togglePick(kind){ openPick[kind] = !openPick[kind]; render(); }
+function pickEmail(kind){
+  const sel = $("pick-"+kind); if(!sel || !sel.value){ toast("Choose an email first"); return; }
+  openPick[kind] = false;
+  sendCmd({type:"pick_email", kind, entry_id: sel.value, label: sel.options[sel.selectedIndex].text});
+}
+function chooseUpload(kind){ $("up-"+kind).click(); }
+async function uploadFiles(kind){
+  const inp = $("up-"+kind);
+  const files = inp && inp.files ? Array.from(inp.files) : [];
+  if(!files.length) return;
+  if(files.reduce((n,f)=>n+f.size,0) > 9e6){ toast("Files are too large (max 9 MB in total)"); return; }
+  if(!agentOnline()){ toast("The report PC is offline"); return; }
+  toast("Uploading…");
+  const read = f => new Promise((ok,bad)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(",")[1]); r.onerror=bad; r.readAsDataURL(f); });
+  try{
+    const payload = {at: Date.now(), files: []};
+    for(const f of files) payload.files.push({name: f.name, type: f.type, b64: await read(f)});
+    await fbPut(`uploads/${kind}`, payload);
+  }catch(e){ toast("Upload failed: " + e.message); return; }
+  sendCmd({type:"upload", kind});
 }
 
-// ---------- the new PDF downloads by itself as soon as it is ready ----------
-let pdfMeta = null, justGenerated = false;
-function pdfFresh(){   // PDF on Firebase belongs to the latest run of THIS week (not an older report)
+// ---------- the four sources ----------
+function shortIssue(r, monthly){
+  const s = r.summary || "";
+  if(/^No .*email/i.test(s)) return monthly ? "No month-end email yet" : "No email this week";
+  if(/days old/i.test(s)) return "Only last week's email";
+  if(/Selected email can't be read/i.test(s)) return "The picked email can't be read";
+  if(/Email format problem/i.test(s)) return "The email can't be read";
+  if(/^Uploaded/i.test(s)) return "The uploaded file can't be read";
+  if(/Not marked as Final/i.test(s)) return "Not marked as Final";
+  return s.split(" · ")[0];
+}
+function sources(){
+  const s = status, res = s.results, monthly = s.mode === "monthly";
+  const pend = name => s.checking && s.pending.includes(name);
+  const out = [];
+  // SAP
+  const sap = res.filter(r => r.group === "SAP");
+  const sapFail = sap.some(r => r.status === "fail" && r.blocking);
+  out.push({key:"sap", name:"SAP", icon:"ti-database",
+    st: pend("SAP HANA connection") && !sapFail ? "wait" : sapFail ? "fail" : sap.length ? "ok" : "idle",
+    pill: sapFail ? "Down" : "Connected", issue: sapFail ? "Wait for Longtree IT to fix SAP" : ""});
+  // one box per report email (Jake / Mark)
+  const outlook = res.find(r => r.id === "mail");
+  const kinds = res.filter(r => r.id.startsWith("kind_")).sort((a,b)=>a.order-b.order);
+  const defs = kinds.length ? kinds : [{id:"kind_snowy", title:"Snowy River email from Jake"}, {id:"kind_leisure", title:"Leisure Lion email from Mark"}];
+  for(const r of defs){
+    const kind = r.id.replace("kind_","");
+    const who = (String(r.title).match(/from (\S+)/) || [,""])[1];
+    const brand = /snowy/i.test(r.title) ? "Snowy River" : /leisure/i.test(r.title) ? "Leisure Lion" : r.title;
+    const box = {key:r.id, kind, name: who ? `${brand} · ${who}` : brand, icon:"ti-mail", acts:[]};
+    const manual = /^Using (selected|uploaded)/.test(r.summary || "");
+    if(outlook && outlook.status === "fail"){ Object.assign(box, {st:"fail", pill:"Action needed", issue:"Outlook can't be opened — contact Leo"}); }
+    else if(pend("Outlook email") && r.status !== "fail"){ Object.assign(box, {st:"wait", pill:"Checking"}); }
+    else if(!r.status){ Object.assign(box, {st:"idle", pill:"Not checked"}); }
+    else if(r.status === "fail"){ Object.assign(box, {st:"fail", pill:"Action needed", issue: shortIssue(r, monthly), acts: r.actions}); }
+    else if(r.status === "warn"){ Object.assign(box, {st:"warn", pill:"Check", issue: shortIssue(r, monthly), acts: r.actions}); }
+    else { Object.assign(box, {st:"ok", pill: manual ? "Picked by hand" : "Received", acts: manual ? r.actions.filter(a=>a.type==="clear_override") : []}); }
+    out.push(box);
+  }
+  // everything else
+  const others = res.filter(r => r.group !== "SAP" && r.group !== "Email");
+  const oFail = others.some(r => r.status === "fail");
+  const oWarn = others.some(r => r.status === "warn");
+  const oPend = s.checking && s.pending.some(p => p !== "SAP HANA connection" && p !== "Outlook email");
+  out.push({key:"other", name:"Other data", icon:"ti-stack-2",
+    st: oFail ? "fail" : oPend ? "wait" : oWarn ? "warn" : others.length ? "ok" : "idle",
+    pill: oFail ? "Action needed" : oWarn ? "Check" : "Ready",
+    issue: oFail ? "Contact Leo" : oWarn ? "Some pages may be missing — contact Leo" : ""});
+  return out;
+}
+function actionsHtml(b){
+  const h = [];
+  for(const a of b.acts || []){
+    if(a.type === "mailto"){
+      const href = `mailto:${encodeURIComponent(a.to)}?subject=${encodeURIComponent(a.subject)}&body=${encodeURIComponent(a.body)}`;
+      h.push(`<a class="btn remind" href="${href}"><i class="ti ti-send"></i>${esc(a.label.replace(/^Email (\S+) a reminder$/,"Remind $1"))}</a>`);
+    } else if(a.type === "pick_email"){
+      h.push(`<button onclick="togglePick('${b.kind}')"><i class="ti ti-mail-search"></i>Pick email</button>`);
+    } else if(a.type === "upload"){
+      h.push(`<button onclick="chooseUpload('${b.kind}')"><i class="ti ti-upload"></i>Upload</button>
+              <input type="file" id="up-${b.kind}" accept="${esc(a.accept||"")}" multiple style="display:none" onchange="uploadFiles('${b.kind}')">`);
+    } else if(a.type === "clear_override"){
+      h.push(`<button onclick="sendCmd({type:'clear_override',kind:'${b.kind}'})"><i class="ti ti-arrow-back-up"></i>Undo pick</button>`);
+    }
+  }
+  const pick = (b.acts||[]).find(a => a.type === "pick_email");
+  const pickHtml = pick ? `<div class="pick ${openPick[b.kind]?"open":""}"><select id="pick-${b.kind}">${(pick.options||[]).map(o=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join("")}</select>
+      <button onclick="pickEmail('${b.kind}')">Use this email</button></div>` : "";
+  return (h.length ? `<div class="acts">${h.join("")}</div>` : "") + pickHtml;
+}
+const PILL_ICON = {ok:"ti-check", fail:"ti-alert-circle", warn:"ti-alert-triangle", wait:"ti-loader-2 spin", idle:"ti-minus"};
+
+// ---------- the generate card ----------
+function weekStart(){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+function runIsCurrent(j){ return !!(j && j.started) && new Date(j.started) >= weekStart(); }
+function pdfFresh(){
   const m = pdfMeta;
   if(!m || !m.uploaded || !m.at || new Date(m.at) < weekStart()) return false;
   return !(run && run.started) || (!run.running && m.at >= run.started);
 }
+const STEPS = [/Invoice \(SAP\)/i, /Scrape|Snowy App|Production/i, /Show/i, /Order/i, /Dealer inventory/i,
+               /Warranty|Aftersales/i, /Recall/i, /Sales Report|sales_email/i, /PDF created|Report saved/i];
+function progress(lines){
+  let done = 0; for(const re of STEPS) if((lines||[]).some(l => re.test(l))) done++;
+  return Math.max(6, Math.round(done / STEPS.length * 100));
+}
+function renderGen(){
+  const s = status, j = run || {}, online = agentOnline(), monthly = s.mode === "monthly";
+  const blockers = s.results.filter(r => r.status === "fail" && r.blocking).length;
+  const g = $("gen");
+  const dateHtml = monthly ? "" : `<div class="date"><input type="date" id="asOf" value="${esc(($("asOf")&&$("asOf").value) || new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10))}"></div>`;
+  const label = monthly ? `${s.month_label || "Monthly"} report` : "Weekly report";
+  const btn = (dis) => `${dateHtml}<button class="go" onclick="generate(false)" ${dis?"disabled":""}><i class="ti ti-file-export"></i>Generate</button>`;
+  let cls, icon, title, msg, body;
+  if(j.running){
+    cls="busy"; icon="ti-loader-2 spin"; title="Generating…"; msg=label;
+    body=`<div class="bar"><i style="width:${progress(j.lines)}%"></i></div>`;
+  } else if(runIsCurrent(j) && j.returncode === 0 && pdfFresh()){
+    cls="ok"; icon="ti-file-download"; title="Report downloaded"; msg=abs(pdfMeta.at);
+    body=`<button class="go" onclick="downloadPdf()"><i class="ti ti-download"></i>Download again</button>
+          <button class="sec" onclick="generate(false)" ${(!online||s.checking||!s.ready||pendingCmd)?"disabled":""}><i class="ti ti-refresh"></i>Generate again</button>`;
+  } else if(runIsCurrent(j) && j.returncode === 0){
+    cls="busy"; icon="ti-loader-2 spin"; title="Finishing…"; msg="Downloading the PDF"; body=`<div class="bar"><i style="width:100%"></i></div>`;
+  } else if(!online){
+    cls="idle"; icon="ti-plug-connected-x"; title="Report PC offline"; msg="Turn it on, then Re-check"; body=btn(true);
+  } else if(s.checking){
+    cls="busy"; icon="ti-loader-2 spin"; title="Checking…"; msg=label; body=btn(true);
+  } else if(blockers){
+    cls="fail"; icon="ti-file-alert"; title="Generate report"; msg=`${blockers} ${blockers===1?"item needs":"items need"} attention`;
+    body=btn(true) + `<button class="force" onclick="generate(true)">Generate anyway</button>`;
+  } else if(s.ready){
+    cls="ok"; icon="ti-file-check"; title="Generate report"; msg="Ready"; body=btn(!!pendingCmd);
+  } else {
+    cls="idle"; icon="ti-file"; title="Generate report"; msg="Re-check first"; body=btn(true);
+  }
+  if(runIsCurrent(j) && !j.running && j.returncode !== 0 && j.returncode != null){
+    cls="fail"; icon="ti-file-x"; title="Generation failed"; msg="Contact Leo"; body=btn(!online || !!pendingCmd || s.checking);
+  }
+  g.className = "gen " + cls;
+  g.innerHTML = `<div class="big"><i class="ti ${icon}"></i></div><h2>${title}</h2><p class="msg">${esc(msg)}</p>${body}`;
+}
+
+// ---------- render ----------
+function render(){
+  const s = status, monthly = s.mode === "monthly", online = agentOnline();
+  if(!online) s.checking = false;
+  $("segW").classList.toggle("on", !monthly); $("segM").classList.toggle("on", monthly);
+  $("monthPick").style.display = monthly ? "" : "none";
+  if(monthly && s.month && document.activeElement !== $("monthPick")) $("monthPick").value = s.month;
+  $("recheck").disabled = s.checking || !online;
+  const boxes = sources();
+  // keep a file input that is being used (re-render would drop the chosen file)
+  $("srcs").innerHTML = boxes.map(b => `<div class="src ${b.st}" data-k="${b.key}">
+      <div class="row"><div class="ic"><i class="ti ${b.st==="fail"?"ti-alert-triangle":b.icon}"></i></div>
+        <span class="nm">${esc(b.name)}</span><span class="pill"><i class="ti ${PILL_ICON[b.st]||""}" style="font-size:14px"></i>${esc(b.pill)}</span></div>
+      ${b.issue ? `<div class="iss">${esc(b.issue)}</div>` : ""}${actionsHtml(b)}</div>`).join("");
+  renderGen();
+  renderDetails();
+  requestAnimationFrame(drawLines);
+}
+function drawLines(){
+  const svg = $("lines"); if(getComputedStyle(svg).display === "none") return;
+  const w = $("flow").getBoundingClientRect(), gen = $("gen").getBoundingClientRect();
+  const gx = gen.left - w.left, gy = gen.top - w.top + gen.height/2, bus = gx - 34;
+  const COL = {ok:"#10b981", fail:"#e11d48", warn:"#d97706", wait:"#6366f1", idle:"#cbd5e1"};
+  let p = "", anyFail = false, allOk = true;
+  document.querySelectorAll(".src").forEach(e => {
+    const st = ["ok","fail","warn","wait","idle"].find(c => e.classList.contains(c)) || "idle";
+    anyFail = anyFail || st === "fail"; allOk = allOk && st === "ok";
+    const r = e.getBoundingClientRect(), y = r.top - w.top + Math.min(r.height/2, 38), x = r.right - w.left;
+    const bend = Math.abs(gy - y) < 12 ? 0 : (gy > y ? 12 : -12);
+    p += `<path d="M${x} ${y} H${bus-12} ${bend?`Q${bus} ${y} ${bus} ${y+bend}`:`H${bus}`} V${gy}" fill="none" stroke="${COL[st]}" stroke-width="2.5" stroke-linecap="round"/>`;
+  });
+  const main = anyFail ? COL.fail : allOk ? COL.ok : COL.idle;
+  p += `<path d="M${bus} ${gy} H${gx-5}" stroke="${main}" stroke-width="3" fill="none"/>
+        <path d="M${gx-13} ${gy-7} L${gx-3} ${gy} L${gx-13} ${gy+7}" stroke="${main}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  svg.innerHTML = p;
+}
+function renderDetails(){
+  const res = status.results;
+  $("rows").innerHTML = res.map(r => `<tr><td class="n">${esc(r.title)}</td><td class="s-${r.status}">${esc(r.summary)}</td></tr>`).join("")
+                        || `<tr><td>No results yet</td></tr>`;
+  const j = run || {};
+  $("console").style.display = runIsCurrent(j) || j.running ? "" : "none";
+  $("console").textContent = (j.lines || []).join("\n");
+}
+
+// ---------- the new PDF downloads by itself ----------
 function lastDownloaded(v){
   try{ if(v !== undefined) localStorage.setItem("weeklyPdfDownloadedAt", v); return localStorage.getItem("weeklyPdfDownloadedAt"); }
   catch(e){ return v === undefined ? window._pdfAt || null : (window._pdfAt = v); }
@@ -527,27 +359,46 @@ function lastDownloaded(v){
 function autoDownload(){
   if(!pdfFresh()) return;
   const at = pdfMeta.at;
-  if(lastDownloaded() === at) return;                         // this PDF was already downloaded here
-  const recent = Date.now() - new Date(at).getTime() < 3 * 3600e3;   // don't pull an old report on a first visit
+  if(lastDownloaded() === at) return;
+  const recent = Date.now() - new Date(at).getTime() < 3 * 3600e3;
   lastDownloaded(at);
   if(recent || justGenerated){ justGenerated = false; downloadPdf(); }
 }
-
 async function downloadPdf(){
   if(!pdfFresh()){ toast("No report generated this week yet"); return; }
   toast("Downloading…");
   try{
     const f = await fbGet("files/pdf");
-    if(!f || !f.b64){ const m = await fbGet("files/pdf_meta"); toast(m && m.reason ? m.reason : "No PDF available yet"); return; }
+    if(!f || !f.b64){ toast("No PDF available yet"); return; }
     const bytes = Uint8Array.from(atob(f.b64), c => c.charCodeAt(0));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
-    a.download = f.name || "weekly_report.pdf"; a.click();
+    a.download = f.name || "report.pdf"; a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
   }catch(e){ toast("Download failed: " + e.message); }
 }
 
-$("asOf").value = new Date(Date.now() - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+// ---------- refresh loop ----------
+async function refresh(){
+  clearTimeout(refreshTimer);
+  try{
+    const [a, s, r, ack, meta] = await Promise.all([fbGet("agent"), fbGet("status"), fbGet("run"), fbGet("command_ack"), fbGet("files/pdf_meta")]);
+    agent = a; status = norm(s); run = r; pdfMeta = meta;
+    if(pendingCmd && ack && ack.id === pendingCmd.id){ toast(ack.message || (ack.ok ? "Done" : "Not run")); pendingCmd = null; }
+    if(pendingCmd && Date.now() - pendingCmd.at > 40000){ toast("The report PC didn't respond — is it on?"); pendingCmd = null; }
+    const busyUi = document.activeElement && /SELECT|INPUT/.test(document.activeElement.tagName) && document.activeElement.closest(".src");
+    if(!busyUi) render(); else renderGen();
+    autoDownload();
+    if(!autoChecked && agentOnline() && !status.checking && !(run && run.running) && !pendingCmd){
+      autoChecked = true; sendCmd({type:"check"});
+    }
+  }catch(e){ toast(/401|403/.test(e.message) ? "No permission to read data" : "Cannot reach Firebase: " + e.message); }
+  const waitingPdf = run && !run.running && run.returncode === 0 && runIsCurrent(run) && !pdfFresh()
+                     && Date.now() - new Date(run.finished || 0).getTime() < 15 * 60e3;
+  const active = (status && status.checking) || (run && run.running) || pendingCmd || waitingPdf;
+  refreshTimer = setTimeout(refresh, active ? 2500 : 15000);
+}
+window.addEventListener("resize", () => requestAnimationFrame(drawLines));
 refresh();
 </script>
 </body>
